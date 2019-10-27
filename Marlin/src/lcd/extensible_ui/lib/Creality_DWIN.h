@@ -82,6 +82,12 @@ namespace ExtUI {
 #define	Choosefilename		0x20D4
 #define	FilenameCount		0x20DE
 #define	FilenameNature		0x6003
+
+#if ENABLED(SKR13)
+  #define DWIN_SERIAL MSerial
+#else
+  #define DWIN_SERIAL Serial2
+#endif
 /************struct**************/
 
 typedef struct DataBuf

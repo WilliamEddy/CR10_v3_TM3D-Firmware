@@ -349,7 +349,11 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT 0
+#if ENABLED(SKR13)
+  #define SERIAL_PORT -1
+#else
+  #define SERIAL_PORT 0
+#endif
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
@@ -359,7 +363,7 @@
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
 #if ENABLED(SKR13)
-  #define SERIAL_PORT_2 -1
+  #define SERIAL_PORT_2 0
 #endif
 /**
  * This setting determines the communication speed of the printer.

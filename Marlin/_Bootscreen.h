@@ -29,7 +29,6 @@
  *  - http://www.marlinfw.org/tools/u8glib/converter.html
  *  - http://www.digole.com/tools/PicturetoC_Hex_converter.php
  */
-#include <avr/pgmspace.h>
 
 #define CUSTOM_BOOTSCREEN_TIMEOUT   2500
 #define CUSTOM_BOOTSCREEN_BMPWIDTH  128

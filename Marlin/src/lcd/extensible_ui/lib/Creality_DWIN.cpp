@@ -46,7 +46,7 @@ namespace ExtUI
 
 void onStartup()
 {
-	Serial2.begin(115200);
+	DWIN_SERIAL.begin(115200);
 
 	rtscheck.recdat.head[0] = rtscheck.snddat.head[0] = FHONE;
 	rtscheck.recdat.head[1] = rtscheck.snddat.head[1] = FHTWO;
@@ -377,9 +377,9 @@ RTSSHOW::RTSSHOW()
 
 int RTSSHOW::RTS_RecData()
 {
-	while (Serial2.available() > 0 && (recnum < SizeofDatabuf))
+	while (DWIN_SERIAL.available() > 0 && (recnum < SizeofDatabuf))
 	{
-		databuf[recnum] = Serial2.read();
+		databuf[recnum] = DWIN_SERIAL.read();
 		if (databuf[0] != FHONE) //ignore the invalid data
 		{
 			if (recnum > 0) // prevent the program from running.
@@ -478,7 +478,7 @@ void RTSSHOW::RTS_SndData(void)
 		}
 		for (int i = 0; i < (snddat.len + 3); i++)
 		{
-			Serial2.write(databuf[i]);
+			DWIN_SERIAL.write(databuf[i]);
 			delay_us(1);
 		}
 
@@ -514,7 +514,7 @@ void RTSSHOW::RTS_SndData(const char *str, unsigned long addr, unsigned char cmd
 
 		for (int i = 0; i < (len + 6); i++)
 		{
-			Serial2.write(databuf[i]);
+			DWIN_SERIAL.write(databuf[i]);
 			delay_us(1);
 		}
 		memset(databuf, 0, sizeof(databuf));
