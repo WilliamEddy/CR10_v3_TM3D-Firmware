@@ -322,7 +322,7 @@ void disable_e_stepper(const uint8_t e);
 void disable_e_steppers();
 void disable_all_steppers();
 
-void kill(PGM_P const lcd_msg=nullptr, const bool steppers_off=false);
+void kill(PGM_P const lcd_error=nullptr, PGM_P const lcd_component=nullptr, const bool steppers_off=false);
 void minkill(const bool steppers_off=false);
 
 void quickstop_stepper();
@@ -333,6 +333,7 @@ inline bool IsStopped() { return !Running; }
 
 bool printingIsActive();
 bool printingIsPaused();
+void startOrResumeJob();
 
 extern bool wait_for_heatup;
 
@@ -351,7 +352,7 @@ extern millis_t max_inactive_time, stepper_inactive_time;
   extern uint8_t controllerfan_speed;
 #endif
 
-#if HAS_POWER_SWITCH
+#if ENABLED(PSU_CONTROL)
   extern bool powersupply_on;
   #define PSU_PIN_ON()  do{ OUT_WRITE(PS_ON_PIN,  PSU_ACTIVE_HIGH); powersupply_on = true; }while(0)
   #define PSU_PIN_OFF() do{ OUT_WRITE(PS_ON_PIN, !PSU_ACTIVE_HIGH); powersupply_on = false; }while(0)

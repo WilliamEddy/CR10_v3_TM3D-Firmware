@@ -45,7 +45,7 @@ bool printer_busy();
   struct MenuEditItemInfo_##NAME { \
     typedef TYPE type_t; \
     static constexpr float scale = SCALE; \
-    static inline char* strfunc(const float value) { return STRFUNC((TYPE) value); } \
+    static inline const char* strfunc(const float value) { return STRFUNC((TYPE) value); } \
   };
 
 DECLARE_MENU_EDIT_TYPE(uint8_t,  percent,     ui8tostr4pct, 100.0/255);   // 100%       right-justified
@@ -75,16 +75,17 @@ typedef void (*selectFunc_t)();
 void draw_select_screen(PGM_P const yes, PGM_P const no, const bool yesno, PGM_P const pref, const char * const string, PGM_P const suff);
 void do_select_screen(PGM_P const yes, PGM_P const no, selectFunc_t yesFunc, selectFunc_t noFunc, PGM_P const pref, const char * const string=nullptr, PGM_P const suff=nullptr);
 inline void do_select_screen_yn(selectFunc_t yesFunc, selectFunc_t noFunc, PGM_P const pref, const char * const string=nullptr, PGM_P const suff=nullptr) {
-  do_select_screen(PSTR(MSG_YES), PSTR(MSG_NO), yesFunc, noFunc, pref, string, suff);
+  do_select_screen(GET_TEXT(MSG_YES), GET_TEXT(MSG_NO), yesFunc, noFunc, pref, string, suff);
 }
 
-#define SS_LEFT   0x00
-#define SS_CENTER 0x01
-#define SS_INVERT 0x02
+#define SS_LEFT    0x00
+#define SS_CENTER  0x01
+#define SS_INVERT  0x02
+#define SS_DEFAULT SS_CENTER
 
 void draw_edit_screen(PGM_P const pstr, const char* const value=nullptr);
 void draw_menu_item(const bool sel, const uint8_t row, PGM_P const pstr, const char pre_char, const char post_char);
-void draw_menu_item_static(const uint8_t row, PGM_P const pstr, const uint8_t style=SS_CENTER, const char * const valstr=nullptr);
+void draw_menu_item_static(const uint8_t row, PGM_P const pstr, const uint8_t style=SS_DEFAULT, const char * const valstr=nullptr);
 void _draw_menu_item_edit(const bool sel, const uint8_t row, PGM_P const pstr, const char* const data, const bool pgm);
 FORCE_INLINE void draw_menu_item_back(const bool sel, const uint8_t row, PGM_P const pstr) { draw_menu_item(sel, row, pstr, LCD_STR_UPLEVEL[0], LCD_STR_UPLEVEL[0]); }
 FORCE_INLINE void draw_menu_item_edit(const bool sel, const uint8_t row, PGM_P const pstr, const char* const data) { _draw_menu_item_edit(sel, row, pstr, data, false); }
@@ -93,7 +94,7 @@ FORCE_INLINE void draw_menu_item_edit_P(const bool sel, const uint8_t row, PGM_P
 #define draw_menu_item_gcode(sel, row, pstr, gcode)   draw_menu_item(sel, row, pstr, '>', ' ')
 #define draw_menu_item_function(sel, row, pstr, data) draw_menu_item(sel, row, pstr, '>', ' ')
 #define DRAW_MENU_ITEM_SETTING_EDIT_GENERIC(VAL)      draw_menu_item_edit(sel, row, pstr, VAL)
-#define DRAW_BOOL_SETTING(sel, row, pstr, data)       draw_menu_item_edit_P(sel, row, pstr, (*(data))?PSTR(MSG_LCD_ON):PSTR(MSG_LCD_OFF))
+#define DRAW_BOOL_SETTING(sel, row, pstr, data)       draw_menu_item_edit_P(sel, row, pstr, (*(data))?GET_TEXT(MSG_LCD_ON):GET_TEXT(MSG_LCD_OFF))
 
 #if ENABLED(SDSUPPORT)
   class CardReader;
@@ -176,6 +177,24 @@ class MenuItem_function {
 /////////// Menu Editing Actions ///////////
 ////////////////////////////////////////////
 
+//
+// The Menu Edit shadow value
+// Only one edit value is needed at a time
+//
+
+typedef union {
+  bool     state;
+  float    decimal;
+  int8_t   int8;
+  int16_t  int16;
+  int32_t  int32;
+  uint8_t  uint8;
+  uint16_t uint16;
+  uint32_t uint32;
+} chimera_t;
+
+extern chimera_t editable;
+
 // Edit items use long integer encoder units
 class MenuEditItemBase {
   private:
@@ -185,7 +204,7 @@ class MenuEditItemBase {
     static screenFunc_t callbackFunc;
     static bool liveEdit;
   protected:
-    typedef char* (*strfunc_t)(const int32_t);
+    typedef const char* (*strfunc_t)(const int32_t);
     typedef void (*loadfunc_t)(void *, const int32_t);
     static void init(PGM_P const el, void * const ev, const int32_t minv, const int32_t maxv, const uint16_t ep, const screenFunc_t cs, const screenFunc_t cb, const bool le);
     static void edit(strfunc_t, loadfunc_t);
@@ -198,7 +217,7 @@ class TMenuEditItem : MenuEditItemBase {
     static inline float unscale(const float value)    { return value * (1.0f / NAME::scale);  }
     static inline float scale(const float value)      { return value * NAME::scale;           }
     static void load(void *ptr, const int32_t value)  { *((type_t*)ptr) = unscale(value);     }
-    static char* to_string(const int32_t value)       { return NAME::strfunc(unscale(value)); }
+    static const char* to_string(const int32_t value) { return NAME::strfunc(unscale(value)); }
   public:
     static void action(
       PGM_P const pstr,                     // Edit label
@@ -303,17 +322,17 @@ class MenuItem_bool {
  * Examples:
  *   BACK_ITEM(MSG_WATCH)
  *   MENU_ITEM(back, MSG_WATCH)
- *     draw_menu_item_back(sel, row, PSTR(MSG_WATCH))
+ *     draw_menu_item_back(sel, row, GET_TEXT(MSG_WATCH))
  *     MenuItem_back::action()
  *
  *   ACTION_ITEM(MSG_PAUSE_PRINT, lcd_sdcard_pause)
  *   MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause)
- *     draw_menu_item_function(sel, row, PSTR(MSG_PAUSE_PRINT), lcd_sdcard_pause)
+ *     draw_menu_item_function(sel, row, GET_TEXT(MSG_PAUSE_PRINT), lcd_sdcard_pause)
  *     MenuItem_function::action(lcd_sdcard_pause)
  *
  *   EDIT_ITEM(int3, MSG_SPEED, &feedrate_percentage, 10, 999)
- *     draw_menu_item_int3(sel, row, PSTR(MSG_SPEED), &feedrate_percentage, 10, 999)
- *     MenuItem_int3::action(PSTR(MSG_SPEED), &feedrate_percentage, 10, 999)
+ *     draw_menu_item_int3(sel, row, GET_TEXT(MSG_SPEED), &feedrate_percentage, 10, 999)
+ *     MenuItem_int3::action(GET_TEXT(MSG_SPEED), &feedrate_percentage, 10, 999)
  *
  */
 #define _MENU_ITEM_P(TYPE, USE_MULTIPLIER, PLABEL, V...) do {  \
@@ -346,24 +365,28 @@ class MenuItem_bool {
   ++_thisItemNr;                                          \
 } while(0)
 
-#define MENU_ITEM_ADDON_START(X) do{ \
-  if (ui.should_draw() && _menuLineNr == _thisItemNr - 1) { \
-    SETCURSOR(X, _lcdLineNr)
+#define STATIC_ITEM(LABEL, V...) STATIC_ITEM_P(GET_TEXT(LABEL), ##V)
 
-#define MENU_ITEM_ADDON_END() } }while(0)
+#define MENU_ITEM_P(TYPE, PLABEL, V...)       _MENU_ITEM_P(TYPE, false, PLABEL, ##V)
+#define MENU_ITEM(TYPE, LABEL, V...)           MENU_ITEM_P(TYPE, GET_TEXT(LABEL), ##V)
 
-#define STATIC_ITEM(LABEL, V...) STATIC_ITEM_P(PSTR(LABEL), ##V)
+#define EDIT_ITEM_P(TYPE, PLABEL, V...)        MENU_ITEM_P(TYPE, PLABEL, ##V)
+#define EDIT_ITEM(TYPE, LABEL, V...)           EDIT_ITEM_P(TYPE, GET_TEXT(LABEL), ##V)
 
-#define MENU_ITEM_P(TYPE, PLABEL, V...)   _MENU_ITEM_P(TYPE, false, PLABEL,      ##V)
-#define MENU_ITEM(TYPE, LABEL, V...)      _MENU_ITEM_P(TYPE, false, PSTR(LABEL), ##V)
-#define EDIT_ITEM(TYPE, LABEL, V...)      _MENU_ITEM_P(TYPE, false, PSTR(LABEL), ##V)
-#define EDIT_ITEM_FAST(TYPE, LABEL, V...) _MENU_ITEM_P(TYPE,  true, PSTR(LABEL), ##V)
+#define EDIT_ITEM_FAST_P(TYPE, PLABEL, V...)  _MENU_ITEM_P(TYPE, true, PLABEL, ##V)
+#define EDIT_ITEM_FAST(TYPE, LABEL, V...) EDIT_ITEM_FAST_P(TYPE, GET_TEXT(LABEL), ##V)
 
-#define SKIP_ITEM()                 (_thisItemNr++)
-#define BACK_ITEM(LABEL)            MENU_ITEM(back,LABEL)
-#define SUBMENU(LABEL, DEST)        MENU_ITEM(submenu, LABEL, DEST)
-#define GCODES_ITEM(LABEL, GCODES)  MENU_ITEM(gcode, LABEL, GCODES)
-#define ACTION_ITEM(LABEL, ACTION)  MENU_ITEM(function, LABEL, ACTION)
+#define ACTION_ITEM_P(PLABEL, ACTION)          MENU_ITEM_P(function, PLABEL, ACTION)
+#define ACTION_ITEM(LABEL, ACTION)           ACTION_ITEM_P(GET_TEXT(LABEL), ACTION)
+
+#define GCODES_ITEM_P(PLABEL, GCODES)          MENU_ITEM_P(gcode, PLABEL, GCODES)
+#define GCODES_ITEM(LABEL, GCODES)           GCODES_ITEM_P(GET_TEXT(LABEL), GCODES)
+
+#define SUBMENU_P(PLABEL, DEST)                MENU_ITEM_P(submenu, PLABEL, DEST)
+#define SUBMENU(LABEL, DEST)                     SUBMENU_P(GET_TEXT(LABEL), DEST)
+
+#define BACK_ITEM(LABEL)                         MENU_ITEM(back, LABEL)
+#define SKIP_ITEM() (_thisItemNr++)
 
 ////////////////////////////////////////////
 /////////////// Menu Screens ///////////////
@@ -405,11 +428,6 @@ void _lcd_draw_homing();
 
 #if ENABLED(LEVEL_BED_CORNERS)
   void _lcd_level_bed_corners();
-#endif
-
-#if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-  extern float lcd_z_fade_height;
-  void _lcd_set_z_fade_height();
 #endif
 
 #if ENABLED(LCD_BED_LEVELING) || (HAS_LEVELING && DISABLED(SLIM_LCD_MENUS))

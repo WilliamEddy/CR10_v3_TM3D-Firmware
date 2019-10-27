@@ -430,6 +430,17 @@ void do_blocking_move_to(const float rx, const float ry, const float rz, const f
 
   planner.synchronize();
 }
+
+void do_blocking_move_to(const xy_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0f*/) {
+  do_blocking_move_to(raw.x, raw.y, current_position.z, fr_mm_s);
+}
+void do_blocking_move_to(const xyz_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0f*/) {
+  do_blocking_move_to(raw.x, raw.y, raw.z, fr_mm_s);
+}
+void do_blocking_move_to(const xyze_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0f*/) {
+  do_blocking_move_to(raw.x, raw.y, raw.z, fr_mm_s);
+}
+
 void do_blocking_move_to_x(const float &rx, const feedRate_t &fr_mm_s/*=0.0*/) {
   do_blocking_move_to(rx, current_position.y, current_position.z, fr_mm_s);
 }
@@ -437,10 +448,18 @@ void do_blocking_move_to_y(const float &ry, const feedRate_t &fr_mm_s/*=0.0*/) {
   do_blocking_move_to(current_position.x, ry, current_position.z, fr_mm_s);
 }
 void do_blocking_move_to_z(const float &rz, const feedRate_t &fr_mm_s/*=0.0*/) {
-  do_blocking_move_to(current_position.x, current_position.y, rz, fr_mm_s);
+  do_blocking_move_to_xy_z(current_position, rz, fr_mm_s);
 }
+
 void do_blocking_move_to_xy(const float &rx, const float &ry, const feedRate_t &fr_mm_s/*=0.0*/) {
   do_blocking_move_to(rx, ry, current_position.z, fr_mm_s);
+}
+void do_blocking_move_to_xy(const xy_pos_t &raw, const feedRate_t &fr_mm_s/*=0.0f*/) {
+  do_blocking_move_to_xy(raw.x, raw.y, fr_mm_s);
+}
+
+void do_blocking_move_to_xy_z(const xy_pos_t &raw, const float &z, const feedRate_t &fr_mm_s/*=0.0f*/) {
+  do_blocking_move_to(raw.x, raw.y, z, fr_mm_s);
 }
 
 //
@@ -1034,8 +1053,8 @@ uint8_t axes_need_homing(uint8_t axis_bits/*=0x07*/) {
 
 bool axis_unhomed_error(uint8_t axis_bits/*=0x07*/) {
   if ((axis_bits = axes_need_homing(axis_bits))) {
-    static const char home_first[] PROGMEM = MSG_HOME_FIRST;
-    char msg[sizeof(home_first)];
+    PGM_P home_first = GET_TEXT(MSG_HOME_FIRST);
+    char msg[strlen_P(home_first)+1];
     sprintf_P(msg, home_first,
       TEST(axis_bits, X_AXIS) ? "X" : "",
       TEST(axis_bits, Y_AXIS) ? "Y" : "",
@@ -1268,13 +1287,13 @@ void do_homing_move(const AxisEnum axis, const float distance, const feedRate_t 
     planner.set_machine_position_mm(target);
     target[axis] = distance;
 
-    #if IS_KINEMATIC && ENABLED(JUNCTION_DEVIATION)
+    #if IS_KINEMATIC && DISABLED(CLASSIC_JERK)
       const xyze_float_t delta_mm_cart{0};
     #endif
 
     // Set delta/cartesian axes directly
     planner.buffer_segment(target
-      #if IS_KINEMATIC && ENABLED(JUNCTION_DEVIATION)
+      #if IS_KINEMATIC && DISABLED(CLASSIC_JERK)
         , delta_mm_cart
       #endif
       , real_fr_mm_s, active_extruder
@@ -1368,6 +1387,11 @@ void set_axis_is_at_home(const AxisEnum axis) {
 
   #if ENABLED(BABYSTEP_DISPLAY_TOTAL)
     babystep.reset_total(axis);
+  #endif
+
+  #if HAS_POSITION_SHIFT
+    position_shift[axis] = 0;
+    update_workspace_offset(axis);
   #endif
 
   if (DEBUGGING(LEVELING)) {

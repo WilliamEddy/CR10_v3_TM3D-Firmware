@@ -179,7 +179,7 @@ namespace ExtUI {
     void setLinearAdvance_mm_mm_s(const float, const extruder_t);
   #endif
 
-  #if ENABLED(JUNCTION_DEVIATION)
+  #if DISABLED(CLASSIC_JERK)
     float getJunctionDeviation_mm();
     void setJunctionDeviation_mm(const float);
   #else
@@ -293,12 +293,13 @@ namespace ExtUI {
   void onMediaError();
   void onMediaRemoved();
   void onPlayTone(const uint16_t frequency, const uint16_t duration);
-  void onPrinterKilled(PGM_P const msg);
+  void onPrinterKilled(PGM_P const error, PGM_P const component);
   void onPrintTimerStarted();
   void onPrintTimerPaused();
   void onPrintTimerStopped();
   void onFilamentRunout(const extruder_t extruder);
   void onUserConfirmRequired(const char * const msg);
+  void onUserConfirmRequired_P(PGM_P const pstr);
   void onStatusChanged(const char * const msg);
   void onFactoryReset();
   void onStoreSettings(char *);

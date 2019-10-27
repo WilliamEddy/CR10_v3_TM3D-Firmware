@@ -44,7 +44,7 @@
 
 #if MACHINE_CAN_STOP
   void menu_abort_confirm() {
-    do_select_screen(PSTR(MSG_BUTTON_STOP), PSTR(MSG_BACK), ui.abort_print, ui.goto_previous_screen, PSTR(MSG_STOP_PRINT), nullptr, PSTR("?"));
+    do_select_screen(GET_TEXT(MSG_BUTTON_STOP), GET_TEXT(MSG_BACK), ui.abort_print, ui.goto_previous_screen, GET_TEXT(MSG_STOP_PRINT), nullptr, PSTR("?"));
   }
 #endif // MACHINE_CAN_STOP
 
@@ -62,7 +62,7 @@ void menu_configuration();
 #endif
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-  void menu_temp_e0_filament_change();
+  void _menu_temp_filament_op(const PauseMode, const int8_t);
   void menu_change_filament();
 #endif
 
@@ -170,7 +170,11 @@ void menu_main() {
   SUBMENU(MSG_CONFIGURATION, menu_configuration);
 
   #if ENABLED(CUSTOM_USER_MENUS)
-    SUBMENU(MSG_USER_MENU, menu_user);
+    #ifdef CUSTOM_USER_MENU_TITLE
+      SUBMENU_P(PSTR(CUSTOM_USER_MENU_TITLE), menu_user);
+    #else
+      SUBMENU(MSG_USER_MENU, menu_user);
+    #endif
   #endif
 
   #if ENABLED(ADVANCED_PAUSE_FEATURE)
@@ -178,7 +182,7 @@ void menu_main() {
       if (thermalManager.targetHotEnoughToExtrude(active_extruder))
         GCODES_ITEM(MSG_FILAMENTCHANGE, PSTR("M600 B0"));
       else
-        SUBMENU(MSG_FILAMENTCHANGE, menu_temp_e0_filament_change);
+        SUBMENU(MSG_FILAMENTCHANGE, [](){ _menu_temp_filament_op(PAUSE_MODE_CHANGE_FILAMENT, 0); });
     #else
       SUBMENU(MSG_FILAMENTCHANGE, menu_change_filament);
     #endif
@@ -195,7 +199,7 @@ void menu_main() {
   //
   // Switch power on/off
   //
-  #if HAS_POWER_SWITCH
+  #if ENABLED(PSU_CONTROL)
     if (powersupply_on)
       GCODES_ITEM(MSG_SWITCH_PS_OFF, PSTR("M81"));
     else
@@ -234,13 +238,13 @@ void menu_main() {
 
   #if HAS_SERVICE_INTERVALS
     #if SERVICE_INTERVAL_1 > 0
-      SUBMENU(SERVICE_NAME_1, menu_service1);
+      SUBMENU_P(PSTR(SERVICE_NAME_1), menu_service1);
     #endif
     #if SERVICE_INTERVAL_2 > 0
-      SUBMENU(SERVICE_NAME_2, menu_service2);
+      SUBMENU_P(PSTR(SERVICE_NAME_2), menu_service2);
     #endif
     #if SERVICE_INTERVAL_3 > 0
-      SUBMENU(SERVICE_NAME_3, menu_service3);
+      SUBMENU_P(PSTR(SERVICE_NAME_3), menu_service3);
     #endif
   #endif
 

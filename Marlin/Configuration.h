@@ -16,10 +16,10 @@
 //#define MachineCR10
 //#define MachineCR10S
 //#define MachineCR10SV2
-//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
-#define MachineCR10Max
+//#define MachineCR10Max
 //#define MachineS4
 //#define MachineS5
 //#define MachineCR2020 // Industrial Series 2020
@@ -58,9 +58,9 @@
 
    Configured with 5015 left wing, right wing ABL sensor (BLTouch or M18) only
 */
-//#define HotendStock
+#define HotendStock
 //#define HotendE3D
-#define HotendMosquito
+//#define HotendMosquito
 
 //Enable this if you have an all metal hotend capable of 300c
 #define HotendAllMetal
@@ -102,8 +102,8 @@
    Leave all disabled if no sensor is available
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
-#define ABL_NCSW //Creality ABL or Any NC Sensor
-//#define ABL_BLTOUCH
+//#define ABL_NCSW //Creality ABL or Any NC Sensor
+#define ABL_BLTOUCH
 
 //#define CREALITY_ABL_MOUNT //Using creality ABL mount
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
@@ -114,8 +114,8 @@
    Requires a sensor from above
    Melzi board users may only select ABL_BI for bilinear leveling
 */
-#define ABL_BI
-//#define ABL_UBL
+//#define ABL_BI
+#define ABL_UBL
 
 //#define POWER_LOSS_RECOVERY //Large and does not fit with any other features on Melzi, or UBL on Atmega
 /*
@@ -221,6 +221,7 @@
 
 // Author info of this build printed to the host during boot and M115
 #define STRING_CONFIG_H_AUTHOR "TinyMachines3D" // Who made the changes.
+#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 /**
  * *** VENDORS PLEASE READ ***
@@ -340,109 +341,6 @@
   // Show the bitmap in Marlin/_Statusscreen.h on the status screen.
   #define CUSTOM_STATUS_SCREEN_IMAGE
 #endif
-
-#if(ENABLED(MachineMini))
-#define CUSTOM_MACHINE_NAME "Mini SuPeR"
-#elif(ENABLED(MachineEnder2))
-#define CUSTOM_MACHINE_NAME "TM3D Ender2"
-#elif(ENABLED(MachineEnder3))
-#define CUSTOM_MACHINE_NAME "TM3D Ender3"
-#elif(ENABLED(MachineEnder4))
-#define CUSTOM_MACHINE_NAME "TM3D Ender4"
-#elif(ENABLED(MachineEnder5))
-#define CUSTOM_MACHINE_NAME "TM3D Ender5"
-#elif(ENABLED(MachineEnder5Plus))
-#define CUSTOM_MACHINE_NAME "TM3D E5 Plus"
-#elif(ENABLED(MachineCR20))
-#define CUSTOM_MACHINE_NAME "SuPeR CR-20"
-#elif(ENABLED(MachineCR10Orig))
-#define CUSTOM_MACHINE_NAME "SuPeR CR-10"
-#elif(ENABLED(MachineCRX))
-#define CUSTOM_MACHINE_NAME "TM3D CR-X"
-#elif(ENABLED(MachineCR10SPro))
-#define CUSTOM_MACHINE_NAME "TM3D 10S Pro"
-#elif(ENABLED(MachineCR10Max))
-#define CUSTOM_MACHINE_NAME "TM3D Max"
-#elif(ENABLED(MachineCR10SV2))
-#define CUSTOM_MACHINE_NAME "Tm3D CR10V2"
-#elif(ENABLED(MachineCR10Std))
-#define CUSTOM_MACHINE_NAME "300 SuPeR"
-#elif(ENABLED(MachineS4))
-#define CUSTOM_MACHINE_NAME "400 SuPeR"
-#elif(ENABLED(MachineS5))
-#define CUSTOM_MACHINE_NAME "500 SuPeR"
-#elif ENABLED(MachineCR2020)
-  #define CUSTOM_MACHINE_NAME "TM3D 2020"
-#endif
-
-#if(ENABLED(MachineMini))
-#define VerChar1 "M"
-#elif(ENABLED(MachineEnder2))
-#define VerChar1 "E2"
-#elif(ENABLED(MachineEnder3))
-#define VerChar1 "E3"
-#elif(ENABLED(MachineEnder4))
-#define VerChar1 "E4"
-#elif(ENABLED(MachineEnder5))
-#define VerChar1 "E5"
-#elif(ENABLED(MachineEnder5Plus))
-#define VerChar1 "E5P"
-#elif(ENABLED(MachineCR20))
-#define VerChar1 "2"
-#elif(ENABLED(MachineCR10Orig))
-#define VerChar1 "O"
-#elif(ENABLED(MachineCR10Std))
-#define VerChar1 "S"
-#elif(ENABLED(MachineCRX))
-#define VerChar1 "X"
-#elif(ENABLED(MachineS4))
-#define VerChar1 "4"
-#elif(ENABLED(MachineS5) || ENABLED(MachineCR10Max))
-#define VerChar1 "5"
-#elif ENABLED(MachineCR2020)
-  #define VerChar1 "20"
-#endif
-
-#if(ENABLED(HotendStock))
-#define VerChar2 "S"
-#elif(ENABLED(HotendE3D))
-#define VerChar2 "E"
-#elif ENABLED(HotendMosquito)
-#define VerChar2 "M"
-#endif
-
-#if(ENABLED(HotendAllMetal))
-#define VerChar3 "M"
-#else
-#define VerChar3 "S"
-#endif
-
-
-#if(ENABLED(BedAC))
-#define VerChar4 "A"
-#elif(ENABLED(BedDC))
-#define VerChar4 "D"
-#else
-#define VerChar4 "N"
-#endif
-
-#if(ENABLED(ABL_EZABL))
-#define VerChar5 "A"
-#elif(ENABLED(ABL_BLTOUCH))
-#define VerChar5 "B"
-#else
-#define VerChar5 "N"
-#endif
-
-#if(ENABLED(ABL_UBL))
-#define VerChar6 "U"
-#elif(ENABLED(ABL_BI))
-#define VerChar6 "B"
-#else
-#define VerChar6 "N"
-#endif
-
-#define DETAILED_BUILD_VERSION SHORT_BUILD_VERSION " TM3D " VerChar1 VerChar2 VerChar3 VerChar4 VerChar5 VerChar6
 
 /**
  * Select the serial port on the board to use for communication with the host.
@@ -699,8 +597,8 @@
     #define AUTO_POWER_E_FANS
     #define AUTO_POWER_CONTROLLERFAN
     #define AUTO_POWER_CHAMBER_FAN
-    //#define AUTO_POWER_E_TEMP        50 // (°C) Turn on PSU over this temperature
-    //#define AUTO_POWER_CHAMBER_TEMP  30 // (°C) Turn on PSU over this temperature
+    //#define AUTO_POWER_E_TEMP        50 // (Â°C) Turn on PSU over this temperature
+    //#define AUTO_POWER_CHAMBER_TEMP  30 // (Â°C) Turn on PSU over this temperature
     #define POWER_TIMEOUT 30
   #endif
 #endif
@@ -748,6 +646,7 @@
  *    67 : 450C thermistor from SliceEngineering
  *    70 : the 100K thermistor found in the bq Hephestos 2
  *    75 : 100k Generic Silicon Heat Pad with NTC 100K MGB18-104F39050L32 thermistor
+ *    99 : 100k thermistor with a 10K pull-up resistor (found on some Wanhao i3 machines)
  *
  *       1k ohm pullup tables - This is atypical, and requires changing out the 4.7k pullup for 1k.
  *                              (but gives greater accuracy and more stable PID)
@@ -765,8 +664,6 @@
  *         Use these for Testing or Development purposes. NEVER for production machine.
  *   998 : Dummy Table that ALWAYS reads 25°C or the temperature defined below.
  *   999 : Dummy Table that ALWAYS reads 100°C or the temperature defined below.
- *
- * :{ '0':"Not used", '1':"100k / 4.7k - EPCOS", '331':"(3.3V thermistor 1)", '2':"200k / 4.7k - ATC Semitec 204GT-2", '3':"Mendel-parts / 4.7k", '4':"10k !! do not use for a hotend. Bad resolution at high temp. !!", '5':"100K / 4.7k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '501':"100K Zonestar (Tronxy X3A)", '512':"100k RPW-Ultra hotend thermistor", '6':"100k / 4.7k EPCOS - Not as accurate as Table 1", '7':"100k / 4.7k Honeywell 135-104LAG-J01", '8':"100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT", '9':"100k / 4.7k GE Sensing AL03006-58.2K-97-G1", '10':"100k / 4.7k RS 198-961", '11':"100k / 4.7k beta 3950 1%", '12':"100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT (calibrated for Makibox hot bed)", '13':"100k Hisens 3950  1% up to 300°C for hotend 'Simple ONE ' & hotend 'All In ONE'", '18':"ATC Semitec 204GT-2 (4.7k pullup) Dagoma.Fr - MKS_Base_DKU001327" '20':"Pt100 (Ultimainboard V2.x)", '201':"Pt100 (Overlord)", '51':"100k / 1k - EPCOS", '52':"200k / 1k - ATC Semitec 204GT-2", '55':"100k / 1k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '60':"100k Maker's Tool Works Kapton Bed Thermistor beta=3950", '61':"100k Formbot / Vivedino 3950 350C thermistor 4.7k pullup", '66':"Dyze Design 4.7M High Temperature thermistor", '67':"Slice Engineering 450C High Temperature thermistor", '70':"the 100K thermistor found in the bq Hephestos 2", '71':"100k / 4.7k Honeywell 135-104LAF-J01", '147':"Pt100 / 4.7k", '1047':"Pt1000 / 4.7k", '110':"Pt100 / 1k (non-standard)", '1010':"Pt1000 / 1k (non standard)", '-4':"Thermocouple + AD8495", '-3':"Thermocouple + MAX31855 (only for sensor 0)", '-2':"Thermocouple + MAX6675 (only for sensor 0)", '-1':"Thermocouple + AD595", '998':"Dummy 1", '999':"Dummy 2", '1000':"Custom thermistor params" }
  */
 #if ANY(HotendStock, CrealityThermistor)
   #define TEMP_SENSOR_0 1
@@ -859,13 +756,11 @@
 #define PID_MAX BANG_MAX // Limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
 #define PID_K1 0.95      // Smoothing factor within any PID loop
 #if ENABLED(PIDTEMP)
-#if DISABLED(LowMemoryBoard)
-  #define PID_EDIT_MENU
-  #define PID_AUTOTUNE_MENU // Add PID Autotune to the LCD "Temperature" menu to run M303 and apply the result.
-#endif
-  //#define PID_DEBUG // Sends debug data to the serial port.
-  //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
-  //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
+  #define PID_EDIT_MENU         // Add PID editing to the "Advanced Settings" menu. (~700 bytes of PROGMEM)
+  #define PID_AUTOTUNE_MENU     // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of PROGMEM)
+  //#define PID_DEBUG             // Sends debug data to the serial port.
+  //#define PID_OPENLOOP 1        // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
+  //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_HOTEND // Uses separate PID parameters for each extruder (useful for mismatched extruders)
                                   // Set/get with gcode: M301 E[extruder number, 0-2]
   #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
@@ -989,15 +884,15 @@
  *
  * *** IT IS HIGHLY RECOMMENDED TO LEAVE THIS OPTION ENABLED! ***
  */
-  #define PREVENT_COLD_EXTRUSION
-  #define EXTRUDE_MINTEMP 170
+#define PREVENT_COLD_EXTRUSION
+#define EXTRUDE_MINTEMP 170
 
-  /**
-   * Prevent a single extrusion longer than EXTRUDE_MAXLENGTH.
-   * Note: For Bowden Extruders make this large enough to allow load/unload.
-   */
-  #define PREVENT_LENGTHY_EXTRUDE
-  #define EXTRUDE_MAXLENGTH 500
+/**
+ * Prevent a single extrusion longer than EXTRUDE_MAXLENGTH.
+ * Note: For Bowden Extruders make this large enough to allow load/unload.
+ */
+#define PREVENT_LENGTHY_EXTRUDE
+#define EXTRUDE_MAXLENGTH 500
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -1310,28 +1205,15 @@
  */
 
 /**
- * Junction Deviation
- *
- * Use Junction Deviation instead of traditional Jerk Limiting
- *
- * See:
- *   https://reprap.org/forum/read.php?1,739819
- *   http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
- */
-#define JUNCTION_DEVIATION
-#if ENABLED(JUNCTION_DEVIATION)
-  #define JUNCTION_DEVIATION_MM 0.08  // (mm) Distance from real junction edge
-#endif
-
-/**
- * Default Jerk (mm/s)
+ * Default Jerk limits (mm/s)
  * Override with M205 X Y Z E
  *
  * "Jerk" specifies the minimum speed change that requires acceleration.
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#if DISABLED(JUNCTION_DEVIATION)
+//#define CLASSIC_JERK
+#if ENABLED(CLASSIC_JERK)
   #define DEFAULT_XJERK 10.0
   #define DEFAULT_YJERK 10.0
   #define DEFAULT_ZJERK  0.3
@@ -1343,6 +1225,17 @@
 #endif
 
 #define DEFAULT_EJERK    5.0  // May be used by Linear Advance
+
+/**
+ * Junction Deviation Factor
+ *
+ * See:
+ *   https://reprap.org/forum/read.php?1,739819
+ *   http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
+ */
+#if DISABLED(CLASSIC_JERK)
+  #define JUNCTION_DEVIATION_MM 0.6 // (mm) Distance from real junction edge
+#endif
 
 /**
  * S-Curve Acceleration
@@ -1877,6 +1770,7 @@
     #define SOFT_ENDSTOPS_MENU_ITEM  // Enable/Disable software endstops from the LCD
   #endif
 #endif
+
 /**
  * Filament Runout Sensors
  * Mechanical or opto endstops are used to check for the presence of filament.
@@ -2160,7 +2054,7 @@
   #elif ENABLED(MachineCRX)
     #define Z_SAFE_HOMING_X_POINT 50 + HOMING_ADD    // X point for Z homing when homing all axis (G28).
     #define Z_SAFE_HOMING_Y_POINT 70 + HOMING_ADD    // Y point for Z homing when homing all axis (G28).
-  #elif ANY(MachineEnder5, MachineEnder5Plus)  
+  #elif ANY(MachineEnder5, MachineEnder5Plus)
     #define Z_SAFE_HOMING_X_POINT 110 + HOMING_ADD    // X point for Z homing when homing all axis (G28).
     #define Z_SAFE_HOMING_Y_POINT 110 + HOMING_ADD    // Y point for Z homing when homing all axis (G28).
   #else
@@ -2430,10 +2324,10 @@
  *
  * Select the language to display on the LCD. These languages are available:
  *
- *   en, an, bg, ca, cz, da, de, el, el-gr, es, eu, fi, fr, gl, hr, it, jp-kana,
- *   ko_KR, nl, pl, pt, pt-br, ru, sk, tr, uk, vi, zh_CN, zh_TW, test
+ *   en, an, bg, ca, cz, da, de, el, el_gr, es, eu, fi, fr, gl, hr, it, jp_kana,
+ *   ko_KR, nl, pl, pt, pt_br, ru, sk, tr, uk, vi, zh_CN, zh_TW, test
  *
- * :{ 'en':'English', 'an':'Aragonese', 'bg':'Bulgarian', 'ca':'Catalan', 'cz':'Czech', 'da':'Danish', 'de':'German', 'el':'Greek', 'el-gr':'Greek (Greece)', 'es':'Spanish', 'eu':'Basque-Euskera', 'fi':'Finnish', 'fr':'French', 'gl':'Galician', 'hr':'Croatian', 'it':'Italian', 'jp-kana':'Japanese', 'ko_KR':'Korean (South Korea)', 'nl':'Dutch', 'pl':'Polish', 'pt':'Portuguese', 'pt-br':'Portuguese (Brazilian)', 'ru':'Russian', 'sk':'Slovak', 'tr':'Turkish', 'uk':'Ukrainian', 'vi':'Vietnamese', 'zh_CN':'Chinese (Simplified)', 'zh_TW':'Chinese (Traditional)', 'test':'TEST' }
+ * :{ 'en':'English', 'an':'Aragonese', 'bg':'Bulgarian', 'ca':'Catalan', 'cz':'Czech', 'da':'Danish', 'de':'German', 'el':'Greek', 'el_gr':'Greek (Greece)', 'es':'Spanish', 'eu':'Basque-Euskera', 'fi':'Finnish', 'fr':'French', 'gl':'Galician', 'hr':'Croatian', 'it':'Italian', 'jp_kana':'Japanese', 'ko_KR':'Korean (South Korea)', 'nl':'Dutch', 'pl':'Polish', 'pt':'Portuguese', 'pt_br':'Portuguese (Brazilian)', 'ru':'Russian', 'sk':'Slovak', 'tr':'Turkish', 'uk':'Ukrainian', 'vi':'Vietnamese', 'zh_CN':'Chinese (Simplified)', 'zh_TW':'Chinese (Traditional)', 'test':'TEST' }
  */
 #define LCD_LANGUAGE en
 
@@ -2565,9 +2459,7 @@
 // If you have a speaker that can produce tones, enable it here.
 // By default Marlin assumes you have a buzzer with a fixed frequency.
 //
-
 #define SPEAKER
-
 
 //
 // The duration and frequency for the UI feedback sound.

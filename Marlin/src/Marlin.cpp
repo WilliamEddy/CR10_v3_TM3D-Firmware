@@ -145,6 +145,10 @@
   #include "feature/power_loss_recovery.h"
 #endif
 
+#if ENABLED(CANCEL_OBJECTS)
+  #include "feature/cancel_object.h"
+#endif
+
 #if HAS_FILAMENT_SENSOR
   #include "feature/runout.h"
 #endif
@@ -219,7 +223,7 @@ void setup_powerhold() {
   #if HAS_SUICIDE
     OUT_WRITE(SUICIDE_PIN, !SUICIDE_PIN_INVERTING);
   #endif
-  #if HAS_POWER_SWITCH
+  #if ENABLED(PSU_CONTROL)
     #if ENABLED(PS_DEFAULT_OFF)
       powersupply_on = true;  PSU_OFF();
     #else
@@ -275,6 +279,10 @@ void quickstop_stepper() {
   sync_plan_position();
 }
 
+void enable_e_steppers() {
+  enable_E0(); enable_E1(); enable_E2(); enable_E3(); enable_E4(); enable_E5();
+}
+
 void enable_all_steppers() {
   #if ENABLED(AUTO_POWER_CONTROL)
     powerManager.power_on();
@@ -282,30 +290,11 @@ void enable_all_steppers() {
   enable_X();
   enable_Y();
   enable_Z();
-  enable_E0();
-  enable_E1();
-  enable_E2();
-  enable_E3();
-  enable_E4();
-  enable_E5();
-}
-
-void enable_e_steppers() {
-  enable_E0();
-  enable_E1();
-  enable_E2();
-  enable_E3();
-  enable_E4();
-  enable_E5();
+  enable_e_steppers();
 }
 
 void disable_e_steppers() {
-  disable_E0();
-  disable_E1();
-  disable_E2();
-  disable_E3();
-  disable_E4();
-  disable_E5();
+  disable_E0(); disable_E1(); disable_E2(); disable_E3(); disable_E4(); disable_E5();
 }
 
 void disable_e_stepper(const uint8_t e) {
@@ -339,7 +328,7 @@ void disable_all_steppers() {
       #ifdef ACTION_ON_CANCEL
         host_action_cancel();
       #endif
-      kill(PSTR(MSG_ERR_PROBING_FAILED));
+      kill(GET_TEXT(MSG_LCD_PROBING_FAILED));
     #endif
   }
 
@@ -357,18 +346,31 @@ void disable_all_steppers() {
 
 #endif
 
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #include "feature/pause.h"
+#else
+  constexpr bool did_pause_print = false;
+#endif
+
 /**
  * Printing is active when the print job timer is running
  */
 bool printingIsActive() {
-  return print_job_timer.isRunning() || IS_SD_PRINTING();
+  return !did_pause_print && (print_job_timer.isRunning() || IS_SD_PRINTING());
 }
 
 /**
  * Printing is paused according to SD or host indicators
  */
 bool printingIsPaused() {
-  return print_job_timer.isPaused() || IS_SD_PAUSED();
+  return did_pause_print || print_job_timer.isPaused() || IS_SD_PAUSED();
+}
+
+void startOrResumeJob() {
+  #if ENABLED(CANCEL_OBJECTS)
+    if (!printingIsPaused()) cancelable.reset();
+  #endif
+  print_job_timer.start();
 }
 
 /**
@@ -701,15 +703,16 @@ void idle(
  * Kill all activity and lock the machine.
  * After this the machine will need to be reset.
  */
-void kill(PGM_P const lcd_msg/*=nullptr*/, const bool steppers_off/*=false*/) {
+void kill(PGM_P const lcd_error/*=nullptr*/, PGM_P const lcd_component/*=nullptr*/, const bool steppers_off/*=false*/) {
   thermalManager.disable_all_heaters();
 
   SERIAL_ERROR_MSG(MSG_ERR_KILLED);
 
   #if HAS_DISPLAY
-    ui.kill_screen(lcd_msg ?: PSTR(MSG_KILLED));
+    ui.kill_screen(lcd_error ?: GET_TEXT(MSG_KILLED), lcd_component);
   #else
-    UNUSED(lcd_msg);
+    UNUSED(lcd_error);
+    UNUSED(lcd_component);
   #endif
 
   #ifdef ACTION_ON_KILL
@@ -735,7 +738,7 @@ void minkill(const bool steppers_off/*=false*/) {
   // Power off all steppers (for M112) or just the E steppers
   steppers_off ? disable_all_steppers() : disable_e_steppers();
 
-  #if HAS_POWER_SWITCH
+  #if ENABLED(PSU_CONTROL)
     PSU_OFF();
   #endif
 
@@ -915,8 +918,6 @@ void setup() {
   #endif
 
   ui.init();
-  ui.reset_status();
-
   #if HAS_SPI_LCD && ENABLED(SHOW_BOOTSCREEN)
     ui.show_bootscreen();
   #endif
@@ -944,6 +945,8 @@ void setup() {
   thermalManager.init();    // Initialize temperature loop
 
   print_job_timer.init();   // Initial setup of print job timer
+
+  ui.reset_status();        // Print startup message after print statistics are loaded
 
   endstops.init();          // Init endstops and pullups
 

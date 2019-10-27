@@ -81,7 +81,11 @@ void onStartup()
 		rtscheck.RTS_SndData(0, MacVersion + j);
 	char sizebuf[20] = {0};
 	sprintf(sizebuf, "%d X %d X %d", Y_BED_SIZE, X_BED_SIZE, Z_MAX_POS);
-	rtscheck.RTS_SndData(CUSTOM_MACHINE_NAME, MacVersion);
+  #if defined(CUSTOM_MACHINE_NAME)
+	  rtscheck.RTS_SndData(CUSTOM_MACHINE_NAME, MacVersion);
+  #else
+    rtscheck.RTS_SndData(MACHINE_NAME, MacVersion);
+  #endif
 	rtscheck.RTS_SndData(DETAILED_BUILD_VERSION, SoftVersion);
 	rtscheck.RTS_SndData(sizebuf, PrinterSize);
 	rtscheck.RTS_SndData(WEBSITE_URL, CorpWebsite);
@@ -1652,7 +1656,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 	recdat.head[1] = FHTWO;
 }
 
-void onPrinterKilled(PGM_P msg) {
+void onPrinterKilled(PGM_P msg, PGM_P component) {
   SERIAL_ECHOLN("***kill***");
   //First we send screen available on old versions of software
 	rtscheck.RTS_SndData(ExchangePageBase + 15, ExchangepageAddr);

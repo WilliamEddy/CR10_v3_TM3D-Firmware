@@ -622,7 +622,7 @@ namespace ExtUI {
     }
   #endif
 
-  #if ENABLED(JUNCTION_DEVIATION)
+  #if DISABLED(CLASSIC_JERK)
 
     float getJunctionDeviation_mm() {
       return planner.junction_deviation_mm;
@@ -796,7 +796,7 @@ namespace ExtUI {
   #endif
 
   uint8_t getProgress_percent() {
-    return ui.get_progress();
+    return ui.get_progress_percent();
   }
 
   uint32_t getProgress_seconds_elapsed() {
@@ -819,9 +819,6 @@ namespace ExtUI {
           #endif
         }
       }
-      //void onMeshUpdate(const uint8_t xpos, const uint8_t ypos, const float zval) {
-      //  UNUSED(xpos); UNUSED(ypos); UNUSED(zval);
-      //}
     #endif
   #endif
 
@@ -942,6 +939,12 @@ namespace ExtUI {
     ui.abort_print();
   }
 
+  void onUserConfirmRequired_P(PGM_P const pstr) {
+    char msg[strlen_P(pstr) + 1];
+    strcpy_P(msg, pstr);
+    onUserConfirmRequired(msg);
+  }
+
   FileList::FileList() { refresh(); }
 
   void FileList::refresh() { num_files = 0xFFFF; }
@@ -1039,11 +1042,11 @@ void MarlinUI::update() {
   ExtUI::onIdle();
 }
 
-void MarlinUI::kill_screen(PGM_P const msg) {
+void MarlinUI::kill_screen(PGM_P const error, PGM_P const component) {
   using namespace ExtUI;
   if (!flags.printer_killed) {
     flags.printer_killed = true;
-    onPrinterKilled(msg);
+    onPrinterKilled(error, component);
   }
 }
 

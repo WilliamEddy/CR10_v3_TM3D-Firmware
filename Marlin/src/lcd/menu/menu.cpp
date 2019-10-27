@@ -25,7 +25,6 @@
 #if HAS_LCD_MENU
 
 #include "menu.h"
-#include "../ultralcd.h"
 #include "../../module/planner.h"
 #include "../../module/motion.h"
 #include "../../module/printcounter.h"
@@ -68,6 +67,7 @@ uint8_t screen_history_depth = 0;
 bool screen_changed;
 
 // Value Editing
+chimera_t editable;
 PGM_P MenuEditItemBase::editLabel;
 void* MenuEditItemBase::editValue;
 int32_t MenuEditItemBase::minEditValue, MenuEditItemBase::maxEditValue;
@@ -131,13 +131,13 @@ void MenuItem_gcode::action(PGM_P const, PGM_P const pgcode) { queue.inject_P(pg
  *
  *   bool MenuItem_int3::_edit();
  *   void MenuItem_int3::edit(); // edit int16_t (interactively)
- *   void MenuItem_int3::action(PGM_P const pstr, int16_t * const ptr, const int16_t minValue, const int16_t maxValue, const screenFunc_t callback = null, const bool live = false);
+ *   void MenuItem_int3::action(PGM_P const pstr, int16_t * const ptr, const int32_t minValue, const int32_t maxValue, const screenFunc_t callback = null, const bool live = false);
  *
  * You can then use one of the menu macros to present the edit interface:
  *   EDIT_ITEM(int3, MSG_SPEED, &feedrate_percentage, 10, 999)
  *
  * This expands into a more primitive menu item:
- *  _MENU_ITEM_P(int3, false, PSTR(MSG_SPEED), &feedrate_percentage, 10, 999)
+ *  _MENU_ITEM_P(int3, false, GET_TEXT(MSG_SPEED), &feedrate_percentage, 10, 999)
  *
  * ...which calls:
  *       MenuItem_int3::action(plabel, &feedrate_percentage, 10, 999)
@@ -147,8 +147,8 @@ void MenuEditItemBase::edit(strfunc_t strfunc, loadfunc_t loadfunc) {
   #if ENABLED(TOUCH_BUTTONS)
     ui.repeat_delay = BUTTON_DELAY_EDIT;
   #endif
-  if (int16_t(ui.encoderPosition) < 0) ui.encoderPosition = 0;
-  if (int16_t(ui.encoderPosition) > maxEditValue) ui.encoderPosition = maxEditValue;
+  if (int32_t(ui.encoderPosition) < 0) ui.encoderPosition = 0;
+  if (int32_t(ui.encoderPosition) > maxEditValue) ui.encoderPosition = maxEditValue;
   if (ui.should_draw())
     draw_edit_screen(editLabel, strfunc(ui.encoderPosition + minEditValue));
   if (ui.lcd_clicked || (liveEdit && ui.should_draw())) {
@@ -201,11 +201,6 @@ void MenuItem_bool::action(PGM_P pstr, bool *ptr, screenFunc_t callback) {
 ///////////////// Menu Tree ////////////////
 ////////////////////////////////////////////
 
-#if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-  float lcd_z_fade_height;
-  void _lcd_set_z_fade_height() { set_z_fade_height(lcd_z_fade_height); }
-#endif
-
 #include "../../Marlin.h"
 
 bool printer_busy() {
@@ -220,11 +215,6 @@ void MarlinUI::goto_screen(screenFunc_t screen, const uint16_t encoder/*=0*/, co
 
     #if ENABLED(TOUCH_BUTTONS)
       repeat_delay = BUTTON_DELAY_MENU;
-    #endif
-
-    #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-      // Shadow for editing the fade height
-      lcd_z_fade_height = planner.z_fade_height;
     #endif
 
     #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -333,8 +323,7 @@ void MarlinUI::_synchronize() {
 // Display the synchronize screen with a custom message
 // ** This blocks the command queue! **
 void MarlinUI::synchronize(PGM_P const msg/*=nullptr*/) {
-  static const char moving[] PROGMEM = MSG_MOVING;
-  sync_message = msg ? msg : moving;
+  sync_message = msg ?: GET_TEXT(MSG_MOVING);
   _synchronize();
 }
 
@@ -351,7 +340,7 @@ void MarlinUI::synchronize(PGM_P const msg/*=nullptr*/) {
 void scroll_screen(const uint8_t limit, const bool is_menu) {
   ui.encoder_direction_menus();
   ENCODER_RATE_MULTIPLY(false);
-  if (ui.encoderPosition > 0x8000) ui.encoderPosition = 0;
+  if (int32_t(ui.encoderPosition) < 0) ui.encoderPosition = 0;
   if (ui.first_page) {
     encoderLine = ui.encoderPosition / (ENCODER_STEPS_PER_MENU_ITEM);
     screen_changed = false;
@@ -428,10 +417,10 @@ void scroll_screen(const uint8_t limit, const bool is_menu) {
     if (ui.should_draw()) {
       #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
         if (!do_probe)
-          draw_edit_screen(PSTR(MSG_Z_OFFSET), ftostr43sign(hotend_offset[active_extruder].z));
+          draw_edit_screen(GET_TEXT(MSG_Z_OFFSET), ftostr43sign(hotend_offset[active_extruder].z));
         else
       #endif
-          draw_edit_screen(PSTR(MSG_ZPROBE_ZOFFSET), ftostr43sign(probe_offset.z));
+          draw_edit_screen(GET_TEXT(MSG_ZPROBE_ZOFFSET), ftostr43sign(probe_offset.z));
 
       #if ENABLED(BABYSTEP_ZPROBE_GFX_OVERLAY)
         if (do_probe) _lcd_zoffset_overlay_gfx(probe_offset.z);
@@ -476,7 +465,7 @@ void scroll_screen(const uint8_t limit, const bool is_menu) {
 
 void _lcd_draw_homing() {
   constexpr uint8_t line = (LCD_HEIGHT - 1) / 2;
-  if (ui.should_draw()) draw_menu_item_static(line, PSTR(MSG_LEVEL_BED_HOMING));
+  if (ui.should_draw()) draw_menu_item_static(line, GET_TEXT(MSG_LEVEL_BED_HOMING));
   ui.refresh(LCDVIEW_CALL_NO_REDRAW);
 }
 
