@@ -132,12 +132,14 @@
 #define MACHINE_NAME "SuPeR CR-10"
 #elif(ENABLED(MachineCRX))
 #define MACHINE_NAME "TM3D CR-X"
+#elif ENABLED(MachineCR10SProV2)
+  #define MACHINE_NAME "TM3D 10SProV2"
 #elif(ENABLED(MachineCR10SPro))
 #define MACHINE_NAME "TM3D 10S Pro"
 #elif(ENABLED(MachineCR10Max))
 #define MACHINE_NAME "TM3D Max"
 #elif(ENABLED(MachineCR10SV2))
-#define MACHINE_NAME "Tm3D CR10V2"
+#define MACHINE_NAME "TM3D CR10V2"
 #elif(ENABLED(MachineCR10Std))
 #define MACHINE_NAME "300 SuPeR"
 #elif(ENABLED(MachineS4))
