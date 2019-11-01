@@ -1413,7 +1413,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           break;
         case 4:
           //BLTouch Reset
-          injectCommands_P(PSTR("M999"));
+          injectCommands_P(PSTR("M999\nM280P0S160"));
           break;
         case 5:
           //PID Bed

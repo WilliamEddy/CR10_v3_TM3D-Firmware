@@ -114,8 +114,8 @@
    Requires a sensor from above
    Melzi board users may only select ABL_BI for bilinear leveling
 */
-//#define ABL_BI
-#define ABL_UBL
+#define ABL_BI
+//#define ABL_UBL
 
 //#define POWER_LOSS_RECOVERY //Large and does not fit with any other features on Melzi, or UBL on Atmega
 /*
@@ -1435,7 +1435,7 @@
 #elif ENABLED(ABL_BLTOUCH)
   #define MIN_PROBE_EDGE 3
 #else
-  #define MIN_PROBE_EDGE 5
+  #define MIN_PROBE_EDGE 10
 #endif
 
 // X and Y axis travel speed (mm/m) between probes
@@ -1709,6 +1709,16 @@
     #define Y_BED_SIZE 308
     #define Z_MAX_POS 400
     #define ClipClearance 25
+  #elif (ENABLED(MachineCR10SPro))
+    #define X_BED_SIZE 315
+    #define Y_BED_SIZE 310
+    #define Z_MAX_POS 400
+    #define ClipClearance 10
+  #elif (ENABLED(MachineCR10SProV2))
+    #define X_BED_SIZE 315
+    #define Y_BED_SIZE 310
+    #define Z_MAX_POS 400
+    #define ClipClearance 5
   #elif (ENABLED(MachineCR10Std))
     #define X_BED_SIZE 315
     #define Y_BED_SIZE 310
