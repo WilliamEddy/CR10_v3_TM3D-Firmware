@@ -133,7 +133,7 @@
 //#define SKR13_2209
 //#define SKR13_UART // Configure SKR board with drivers in UART mode
 //#define SKR13_ReverseSteppers // Some users reported directions backwards than others on SKR with various drivers.
-
+#define I2C_EEPROM  // use I2C EEPROM on SRK PRO v1.1 e.g AT24C256
  /*
   *
   * If any non-stock dual extruder is used, define type here
@@ -368,6 +368,13 @@
   #define SolidBedMounts
 #endif
 
+#if ENABLED(SKRPRO11)
+  #define FIL_RUNOUT_PIN   PE15
+  #if DISABLED(I2C_EEPROM)
+    #define FLASH_EEPROM_EMULATION
+  #endif
+#endif
+
 //Show the Marlin bootscreen on startup. ** ENABLE FOR PRODUCTION **
 
 #if NONE(MachineCR10Orig, MachineEnder4, MachineCR10SPro, MachineCRX, MachineCR10Max, MachineEnder5Plus) || ENABLED(GraphicLCD)
@@ -386,7 +393,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#if ENABLED(SKR13)
+#if ANY(SKR13, SKRPRO11)
   #define SERIAL_PORT -1
 #else
   #define SERIAL_PORT 0
@@ -401,6 +408,8 @@
  */
 #if ENABLED(SKR13)
   #define SERIAL_PORT_2 0
+#elif ENABLED(SKRPRO11)
+  //#define SERIAL_PORT_2 1
 #endif
 /**
  * This setting determines the communication speed of the printer.
@@ -420,6 +429,8 @@
 #ifndef MOTHERBOARD
   #if ENABLED(SKR13)
     #define MOTHERBOARD BOARD_BIGTREE_SKR_V1_3
+  #elif ENABLED(SKRPRO11)
+    #define MOTHERBOARD BOARD_BIGTREE_SKR_PRO_V1_1
   #elif (ENABLED(MachineCR10Orig) && DISABLED(Melzi_To_SBoardUpgrade))
     #define MOTHERBOARD BOARD_MELZI_CREALITY
   #else
@@ -1067,8 +1078,8 @@
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 
-#if ANY(SKR13, MachineCR10SV2) && DISABLED(SKR13_UART)
-  #if ENABLED(SKR13_2209)
+#if ANY(SKR13, SKRPRO11, MachineCR10SV2) && DISABLED(SKR_UART)
+  #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209_STANDALONE
     #define Y_DRIVER_TYPE  TMC2209_STANDALONE
     #define Z_DRIVER_TYPE  TMC2209_STANDALONE
@@ -1081,8 +1092,8 @@
     #define E0_DRIVER_TYPE TMC2208_STANDALONE
     #define E1_DRIVER_TYPE TMC2208_STANDALONE
   #endif
-#elif ENABLED(SKR13, SKR13_UART)
-  #if ENABLED(SKR13_2209)
+#elif ANY(SKR13, SKRPRO11) && ENABLED(SKR_UART)
+  #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209
     #define Y_DRIVER_TYPE  TMC2209
     #define Z_DRIVER_TYPE  TMC2209
