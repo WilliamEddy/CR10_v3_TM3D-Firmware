@@ -85,6 +85,8 @@ namespace ExtUI {
 
 #if ENABLED(SKR13)
   #define DWIN_SERIAL MSerial
+#elif ENABLED(SKRPRO11)
+  #define DWIN_SERIAL Serial1
 #else
   #define DWIN_SERIAL Serial2
 #endif
