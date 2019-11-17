@@ -1800,7 +1800,7 @@ void onFactoryReset()
 {
 	SERIAL_ECHOLN("==onFactoryReset==");
 }
-void onMeshUpdate(const uint8_t xpos, const uint8_t ypos, const float zval)
+void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
 {
   if(waitway==3)
     if(isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED)-1)))
