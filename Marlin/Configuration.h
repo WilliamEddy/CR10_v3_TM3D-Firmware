@@ -6,7 +6,7 @@
 */
 
 //#define MachineEnder2
-//#define MachineEnder3
+#define MachineEnder3
 //#define MachineEnder4
 //#define MachineEnder5
 //#define MachineEnder5Plus
@@ -16,7 +16,7 @@
 //#define MachineCR10
 //#define MachineCR10S
 //#define MachineCR10SV2
-#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
 //#define MachineCR10Max
@@ -37,7 +37,7 @@
 //#define OrigLCD // Upgraded mainboard with single cable Ender LCD
 //#define GraphicLCD //Full graphics LCD for Ender 4, CR-X or CR10SPro
 //#define ForceCRXDisplay
-#define Force10SProDisplay
+//#define Force10SProDisplay
 
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
@@ -114,8 +114,8 @@
    Requires a sensor from above
    Melzi board users may only select ABL_BI for bilinear leveling
 */
-//#define ABL_BI
-#define ABL_UBL
+#define ABL_BI
+//#define ABL_UBL
 
 //#define POWER_LOSS_RECOVERY //Large and does not fit with any other features on Melzi, or UBL on Atmega
 /*
@@ -618,9 +618,10 @@
  *
  * Temperature sensors available:
  *
+ *    -5 : PT100 / PT1000 with MAX31865 (only for sensors 0-1)
+ *    -3 : thermocouple with MAX31855 (only for sensors 0-1)
+ *    -2 : thermocouple with MAX6675 (only for sensors 0-1)
  *    -4 : thermocouple with AD8495
- *    -3 : thermocouple with MAX31855 (only for sensor 0)
- *    -2 : thermocouple with MAX6675 (only for sensor 0)
  *    -1 : thermocouple with AD595
  *     0 : not used
  *     1 : 100k thermistor - best choice for EPCOS 100k (4.7k pullup)
@@ -2805,10 +2806,10 @@
 //#define MALYAN_LCD
 
 //
-// LulzBot Color Touch UI for FTDI EVE (FT800/FT810) displays
+// Touch UI for FTDI EVE (FT800/FT810) displays
 // See Configuration_adv.h for all configuration options.
 //
-//#define LULZBOT_TOUCH_UI
+//#define TOUCH_UI_FTDI_EVE
 
 //
 // Third-party or vendor-customized controller interfaces.
