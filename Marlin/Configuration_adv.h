@@ -1434,7 +1434,7 @@
     #endif
   #endif
 
-  #if ENABLED(EXTENSIBLE_UI)
+  #if ENABLED(EXTENSIBLE_UI) && NONE(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH)
     #define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
   #endif
 

@@ -901,7 +901,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
       if (WITHIN((tmp_zprobe_offset), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
       {
-        //babystepAxis_steps((400 * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
+        babystepAxis_steps((400 * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
         setZOffset_mm(tmp_zprobe_offset);
         injectCommands_P((PSTR("M500")));
       }
@@ -1109,7 +1109,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() + 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            //babystepAxis_steps(40, (axis_t)Z);
+            babystepAxis_steps(40, (axis_t)Z);
             setZOffset_mm(getZOffset_mm() + 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
@@ -1123,7 +1123,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() - 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            //babystepAxis_steps(-40, (axis_t)Z);
+            babystepAxis_steps(-40, (axis_t)Z);
             setZOffset_mm(getZOffset_mm() - 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
