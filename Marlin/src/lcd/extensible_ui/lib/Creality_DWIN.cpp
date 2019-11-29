@@ -273,7 +273,7 @@ void onIdle()
 			return;
     }
 
-			if (isPrinting()) //need to optimize
+			if (isPrinting())
 			{
         rtscheck.RTS_SndData(0 + CEIconGrap, IconPrintstatus);
 				rtscheck.RTS_SndData(getProgress_seconds_elapsed() / 3600, Timehour);
@@ -317,6 +317,7 @@ void onIdle()
 			rtscheck.RTS_SndData(getActualTemp_celsius(BED), Bedtemp);
       rtscheck.RTS_SndData(getTargetTemp_celsius(H0), NozzlePreheat);
 			rtscheck.RTS_SndData(getTargetTemp_celsius(BED), BedPreheat);
+			rtscheck.RTS_SndData(getFlowPercentage(E0), Flowrate);
 
 			if (NozzleTempStatus[0] || NozzleTempStatus[2]) //statuse of loadfilement and unloadfinement when temperature is less than
 			{
@@ -694,7 +695,7 @@ void RTSSHOW::RTS_HandleData()
 		{
 			if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
 				Checkkey = PrintChoice;
-			else if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat)
+			else if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat || Addrbuf[i] == Flowrate)
 				Checkkey = ManualSetTemp;
 			else if (Addrbuf[i] >= AutoZero && Addrbuf[i] <= DisplayZaxis)
 				Checkkey = XYZEaxis;
@@ -731,7 +732,6 @@ void RTSSHOW::RTS_HandleData()
       const unsigned short autoMeasure = 96;
       const unsigned short assistEntry = 95;
       const unsigned short levelOn = 94;
-
     #else
       const uint8_t topLeftData = 7;
       const uint8_t topRightData = 8;
@@ -745,6 +745,9 @@ void RTSSHOW::RTS_HandleData()
       const uint8_t assistEntry = 4;
       const uint8_t levelOn = 11;
     #endif
+
+    const uint8_t validateMesh = 12;
+
 SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
 	switch (Checkkey)
@@ -898,7 +901,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
       if (WITHIN((tmp_zprobe_offset), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
       {
-        babystepAxis_steps((400 * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
+        //babystepAxis_steps((400 * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
         setZOffset_mm(tmp_zprobe_offset);
         injectCommands_P((PSTR("M500")));
       }
@@ -1010,6 +1013,10 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       {
         setTargetTemp_celsius((float)recdat.data[0], BED);
       }
+      else if (recdat.addr == Flowrate)
+      {
+        setFlow_percent((int16_t)recdat.data[0], getActiveTool());
+      }
       break;
 
     case Setting:
@@ -1102,7 +1109,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() + 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            babystepAxis_steps(40, (axis_t)Z);
+            //babystepAxis_steps(40, (axis_t)Z);
             setZOffset_mm(getZOffset_mm() + 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
@@ -1116,7 +1123,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() - 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            babystepAxis_steps(-40, (axis_t)Z);
+            //babystepAxis_steps(-40, (axis_t)Z);
             setZOffset_mm(getZOffset_mm() - 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
@@ -1237,9 +1244,15 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           RTS_SndData(getZOffset_mm() * 100, 0x1026);
           break;
         }
+        case validateMesh:
+        {
+          injectCommands_P(PSTR("G26R255"));
+          onStatusChanged("Beginning G26.. Heating");
+          break;
+        }
         default:
         {
-          SERIAL_ECHOLN(PSTR("Unsupported Option Selected"));
+          SERIAL_ECHOPAIR("Unsupported Option Selected", recdat.data[0]);
         }
       }
 
@@ -1793,8 +1806,8 @@ void onUserConfirmRequired(const char *const msg)
 void onStatusChanged(const char *const msg)
 {
   for (int j = 0; j < 40; j++) // Clear old message
-    rtscheck.RTS_SndData(' ', 0x20E8+j);
-  rtscheck.RTS_SndData(msg, 0x20E8);
+    rtscheck.RTS_SndData(' ', 0x3000+j);
+  rtscheck.RTS_SndData(msg, 0x3000);
 }
 void onFactoryReset()
 {

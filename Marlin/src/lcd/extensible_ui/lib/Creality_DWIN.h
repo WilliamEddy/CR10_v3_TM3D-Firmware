@@ -33,7 +33,7 @@ namespace ExtUI {
 #define	ExchangepageAddr	0x0084
 #define	SoundAddr			0x00A0
 #define	StartIcon			0x1000
-#define	FeedrateDisplay		0x1006
+#define	FeedrateDisplay		0x1006 // Speed
 #define	Stopprint			0x1008
 #define	Pauseprint			0x100A
 #define	Resumeprint			0x100C
@@ -43,6 +43,7 @@ namespace ExtUI {
 #define	IconPrintstatus		0x1014
 #define	Percentage			0x1016
 #define	FanKeyIcon			0x101E
+#define Flowrate        0x1300
 
 #define	HeatPercentIcon		0x1024
 

@@ -1,22 +1,17 @@
 /*
-   Base machine
-   Choose one option below to define machine size, board, and parameters
+   Basic Options
 
-   Select machine size
+   Select Machine
 */
 
-//#define MachineEnder2
-#define MachineEnder3
-//#define MachineEnder4
-//#define MachineEnder5
+// Standard Atmega2560 machines (No bootloader required)
+
 //#define MachineEnder5Plus
-//#define MachineMini
 //#define MachineCR20 //Buzzer doesnt work
 //#define MachineCR20Pro
-//#define MachineCR10
 //#define MachineCR10S
 //#define MachineCR10SV2
-//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
 //#define MachineCR10Max
@@ -24,31 +19,17 @@
 //#define MachineS5
 //#define MachineCR2020 // Industrial Series 2020
 
+// Atmega1284P machines Needs a bootloader flashed before installation
+// See video here : https://www.youtube.com/watch?v=fIl5X2ffdyo
 
-/*
-   Enabled this for linear advance instead of mesh leveling on a melzi board
-*/
-//#define OrigLA
+//#define MachineEnder2
+//#define MachineEnder3
+//#define MachineEnder4
+//#define MachineEnder5
+//#define MachineMini
+//#define MachineCR10
 
 //#define PLUS // Adds bltouch, allmetal, bilinear (standard), lerdge, 93 e steps/mm
-
-//#define Big_UI // Lightweight status screen
-
-//#define OrigLCD // Upgraded mainboard with single cable Ender LCD
-//#define GraphicLCD //Full graphics LCD for Ender 4, CR-X or CR10SPro
-//#define ForceCRXDisplay
-//#define Force10SProDisplay
-
-//#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
-//#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
-//#define DualFilSensors //Using dual filament sensors on XMax and YMAX
-
-//#define MachineCR10Orig // Forces Melzi board
-//#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
-//#define SKR13 // 32 bit board - assumes 2208 drivers
-//#define SKR13_2209
-//#define SKR13_UART // Configure SKR board with drivers in UART mode
-//#define SKR13_ReverseSteppers // Some users reported directions backwards than others on SKR with various drivers.
 
 /*
    Hotend Type
@@ -57,6 +38,8 @@
    https://www.thingiverse.com/thing:2494642
 
    Configured with 5015 left wing, right wing ABL sensor (BLTouch or M18) only
+
+   Mosquito assumes E3D Groovemount setup using the above as well
 */
 #define HotendStock
 //#define HotendE3D
@@ -75,18 +58,7 @@
  //#define EZRstruder
  //#define Bondtech
  //#define E3DTitan
-
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
-
- /*
-  *
-  * If any dual extruder is used, define type here
-  */
-
-  //#define Dual_BowdenSplitterY
-  //#define Dual_CyclopsSingleNozzle
-  //#define Dual_ChimeraDualNozzle
-
 
 /*
    Choose bed type below. If you have an extenrally controlled
@@ -109,24 +81,72 @@
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
 //#define E3D_PROBEMOUNT_LEFT // Default is probe mounted to the right for E3D. Set this to invert.
 
+
+/**
+ * Screen options
+ */
+
+//#define OrigLCD // Upgraded mainboard with single cable Ender LCD
+//#define GraphicLCD //Full graphics LCD for Ender 4, CR-X or CR10SPro
+//#define Big_UI // Lightweight status screen, saves CPU cycles
+
+// Touchscreen options - only 32 bit boards have the open serial ports to use with graphics displays above
+//#define ForceCRXDisplay
+//#define Force10SProDisplay
+
+//#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
+//#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
+//#define DualFilSensors //Using dual filament sensors on XMax and YMAX
+//#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
+
+// Advanced options - Not for most users
+
 /*
    Choose bed leveling type here
    Requires a sensor from above
    Melzi board users may only select ABL_BI for bilinear leveling
+   If a probe is enabled and nothing selected here, defaults to Bilinear
 */
-#define ABL_BI
+//#define ABL_BI
 //#define ABL_UBL
+
+/*
+   For melzi boards these options allow you to cusomize what you want to do.
+   Since the storage space is so small, it cannot fit most options together.
+   Even just a probe and leveling with standard options is filling te entire program space!
+*/
+//#define OrigLA // Enable this for linear advance instead of mesh leveling on a melzi board
+//#define MelziHostOnly // Enable this to turn off local SD support and instead prioritize options for Octoprint or USB
+
+/**
+ * Advanced motherboard replacement options
+ */
+
+//#define MachineCR10Orig // Forces Melzi board
+//#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
+//#define SKR13 // 32 bit board - assumes 2208 drivers
+//#define SKR13_2209
+//#define SKR13_UART // Configure SKR board with drivers in UART mode
+//#define SKR13_ReverseSteppers // Some users reported directions backwards than others on SKR with various drivers.
+
+ /*
+  *
+  * If any non-stock dual extruder is used, define type here
+  */
+
+  //#define Dual_BowdenSplitterY
+  //#define Dual_CyclopsSingleNozzle
+  //#define Dual_ChimeraDualNozzle
 
 //#define POWER_LOSS_RECOVERY //Large and does not fit with any other features on Melzi, or UBL on Atmega
 /*
-
    Choose a probe grid density below. Faster probes less points, but is less accurate.
    Extreme is for extremely uneven or tilted bed surfaces.
    UBL and Extreme are recommended with solid bed mounts as it becomes a one time commissioning.
    Standard is recommended in most other scenarios.
 */
 //#define MeshFast
-#define MeshStd
+//#define MeshStd
 //#define MeshFine
 //#define MeshExtreme
 
@@ -310,6 +330,18 @@
   #endif
   #define ABL_BLTOUCH
   #define HotendAllMetal
+#endif
+
+#if NONE(HotendStock, HotendE3D, HotendMosquito)
+  #define HotendStock
+#endif
+
+#if ANY(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH) && NONE(ABL_UBL, ABL_BI)
+  #define ABL_BI
+#endif
+
+#if NONE(MeshFast, MeshStd, MeshFine, MeshExtreme)
+  #define MeshStd
 #endif
 
 #if(ENABLED(MachineCRX))
@@ -1556,7 +1588,7 @@
     #define INVERT_E0_DIR true
     #define INVERT_E1_DIR false
   #endif
-#elif ANY(MachineCR10Orig, SKR13_ReverseSteppers)
+#elif ANY(MachineCR10Orig, SKR13) && DISABLED(SKR13_ReverseSteppers)
   #define INVERT_X_DIR true
   #define INVERT_Y_DIR true
   #define INVERT_Z_DIR false
@@ -1819,13 +1851,19 @@
   // After a runout is detected, continue printing this length of filament
   // before executing the runout script. Useful for a sensor at the end of
   // a feed tube. Requires 4 bytes SRAM per sensor, plus 4 bytes overhead.
-  #define FILAMENT_RUNOUT_DISTANCE_MM 5
+  #if ENABLED(FilamentEncoder)
+    #define FILAMENT_RUNOUT_DISTANCE_MM 10
+  #else
+    #define FILAMENT_RUNOUT_DISTANCE_MM 5
+  #endif
 
   #ifdef FILAMENT_RUNOUT_DISTANCE_MM
     // Enable this option to use an encoder disc that toggles the runout pin
     // as the filament moves. (Be sure to set FILAMENT_RUNOUT_DISTANCE_MM
     // large enough to avoid false positives.)
-    //#define FILAMENT_MOTION_SENSOR
+    #if ENABLED(FilamentEncoder)
+      #define FILAMENT_MOTION_SENSOR
+    #endif
   #endif
 #endif
 
