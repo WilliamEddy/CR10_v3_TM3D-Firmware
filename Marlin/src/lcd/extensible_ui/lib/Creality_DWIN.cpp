@@ -1150,16 +1150,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           RTS_SndData(3, AutolevelIcon);
           uint8_t abl_probe_index = 0;
           while (abl_probe_index < 25) {
-            // Set meshCount.x, meshCount.y based on abl_probe_index, with zig-zag
-            uint8_t x_pos = abl_probe_index / GRID_MAX_POINTS_X;
-            uint8_t y_pos = abl_probe_index - (x_pos * GRID_MAX_POINTS_X);
-
-            // Probe in reverse order for every other row/column
-            bool zig = (x_pos & 1); // != ((PR_OUTER_END) & 1);
-
-            if (zig) y_pos = (GRID_MAX_POINTS_X - 1) - y_pos;
-            xy_uint8_t point = {x_pos, y_pos};
-            rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + abl_probe_index * 2);
+            rtscheck.RTS_SndData(0, AutolevelVal + abl_probe_index * 2);
             ++abl_probe_index;
           }
           RTS_SndData(ExchangePageBase + 85, ExchangepageAddr);
