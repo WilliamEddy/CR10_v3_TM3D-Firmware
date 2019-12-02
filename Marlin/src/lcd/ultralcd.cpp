@@ -1524,7 +1524,7 @@ void MarlinUI::update() {
     set_status_P(print_paused);
 
     #if ENABLED(PARK_HEAD_ON_PAUSE)
-      #if HAS_SPI_LCD
+      #if HAS_LCD_MENU
         lcd_pause_show_message(PAUSE_MESSAGE_PAUSING, PAUSE_MODE_PAUSE_PRINT);  // Show message immediately to let user know about pause in progress
       #endif
       queue.inject_P(PSTR("M25 P\nM24"));

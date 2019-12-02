@@ -101,6 +101,11 @@
 
 // Advanced options - Not for most users
 
+// User defined thermistor
+//Sets thermistor based calculated beta values instead of lookup tables
+//#define ConfigurableThermistors
+
+
 /*
    Choose bed leveling type here
    Requires a sensor from above
@@ -702,7 +707,12 @@
  *   998 : Dummy Table that ALWAYS reads 25°C or the temperature defined below.
  *   999 : Dummy Table that ALWAYS reads 100°C or the temperature defined below.
  */
-#if ANY(HotendStock, CrealityThermistor)
+#if ENABLED(ConfigurableThermistors)
+  #define TEMP_SENSOR_0 1000
+  #if(ENABLED(Dual_ChimeraDualNozzle))
+    #define TEMP_SENSOR_1 1000
+  #endif
+#elif ANY(HotendStock, CrealityThermistor)
   #define TEMP_SENSOR_0 1
   #if(ENABLED(Dual_ChimeraDualNozzle))
     #define TEMP_SENSOR_1 1
@@ -725,7 +735,9 @@
 #define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_4 0
 #define TEMP_SENSOR_5 0
-#if ENABLED(BedDC)
+#if ENABLED(ConfigurableThermistors) && ANY(BedDC, BedAC)
+  #define TEMP_SENSOR_BED 1000
+#elif ENABLED(BedDC)
 	#define TEMP_SENSOR_BED 5
 #elif ENABLED(BedAC)
 	#define TEMP_SENSOR_BED 11
@@ -874,7 +886,7 @@
  * heater. If your configuration is significantly different than this and you don't understand
  * the issues involved, don't use bed PID until someone else verifies that your hardware works.
  */
-#if(NONE(MachineCR10Orig, LowMemoryBoard))
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define PIDTEMPBED
 #endif
 //#define BED_LIMIT_SWITCHING
@@ -1282,7 +1294,7 @@
  *
  * See https://github.com/synthetos/TinyG/wiki/Jerk-Controlled-Motion-Explained
  */
-#if DISABLED(MachineCR10Orig)
+#if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
   #define S_CURVE_ACCELERATION
 #endif
 
@@ -1489,7 +1501,7 @@
  * A total of 2 does fast/slow probes with a weighted average.
  * A total of 3 or more adds more slow probes, taking the average.
  */
-#if DISABLED(MachineCR10Orig)
+#if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
   #define MULTIPLE_PROBING 2
 #endif
 //#define EXTRA_PROBING    1
@@ -2090,7 +2102,9 @@
 // - Move the Z probe (or nozzle) to a defined XY point before Z Homing when homing all axes (G28).
 // - Prevent Z homing when the Z probe is outside bed area.
 //
-#define Z_SAFE_HOMING
+#if ANY(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH)
+  #define Z_SAFE_HOMING
+#endif
 
 #if ENABLED(E3D_DUALFAN_MOUNT)
   #define HOMING_ADD 15
@@ -2348,7 +2362,7 @@
  *   M76 - Pause the print job timer
  *   M77 - Stop the print job timer
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
  #define PRINTJOB_TIMER_AUTOSTART
 #endif
 /**
@@ -2422,7 +2436,9 @@
  * you must uncomment the following option or it won't work.
  *
  */
-#define SDSUPPORT
+#if DISABLED(MelziHostOnly)
+  #define SDSUPPORT
+#endif
 
 /**
  * SD CARD: SPI SPEED
@@ -2447,8 +2463,10 @@
  * Disable all menus and only display the Status Screen, or
  * just remove some extraneous menu items to recover space.
  */
-//#define NO_LCD_MENUS
-//#define SLIM_LCD_MENUS
+#if ENABLED(MachineCR10Orig)
+  #define NO_LCD_MENUS
+  //#define SLIM_LCD_MENUS
+#endif
 
 //
 // ENCODER SETTINGS
@@ -2512,7 +2530,9 @@
 // If you have a speaker that can produce tones, enable it here.
 // By default Marlin assumes you have a buzzer with a fixed frequency.
 //
-#define SPEAKER
+#if ENABLED(MachineCR10Orig)
+  #define SPEAKER
+#endif
 
 //
 // The duration and frequency for the UI feedback sound.

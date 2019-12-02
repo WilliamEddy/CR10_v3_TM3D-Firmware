@@ -140,7 +140,7 @@
   #define THERMAL_PROTECTION_PERIOD 60        // Seconds
   #define THERMAL_PROTECTION_HYSTERESIS 10     // Degrees Celsius
 
-  #if DISABLED(MachineCR10Orig)
+  #if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
     #define ADAPTIVE_FAN_SLOWING              // Slow part cooling fan if temperature drops
   #endif
   #if BOTH(ADAPTIVE_FAN_SLOWING, PIDTEMP)
@@ -280,7 +280,7 @@
  * Also, if the temperature is set to a value below mintemp, it will not be changed by autotemp.
  * On an Ultimaker, some initial testing worked with M109 S215 B260 F1 in the start.gcode
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define AUTOTEMP
 #endif
 #if ENABLED(AUTOTEMP)
@@ -986,13 +986,13 @@
 
   // On the Info Screen, display XY with one decimal place when possible
   #define LCD_DECIMAL_SMALL_XY
+
+  // The timeout (in ms) to return to the status screen from sub-menus
+  #define LCD_TIMEOUT_TO_STATUS 15000
+
+  // Add an 'M73' G-code to set the current percentage
+  #define LCD_SET_PROGRESS_MANUALLY
 #endif
-// The timeout (in ms) to return to the status screen from sub-menus
-#define LCD_TIMEOUT_TO_STATUS 15000
-
-// Add an 'M73' G-code to set the current percentage
-#define LCD_SET_PROGRESS_MANUALLY
-
 // Show the E position (filament used) during printing
 //#define LCD_SHOW_E_TOTAL
 
@@ -1647,6 +1647,7 @@
 // @section serial
 
 // The ASCII buffer for serial input
+
 #define MAX_CMD_SIZE 96
 #if(ENABLED(MachineCR10Orig) || ENABLED(LowMemoryBoard))
 #define BUFSIZE 2
@@ -1697,12 +1698,12 @@
 // Therefore some clients abort after 30 seconds in a timeout.
 // Some other clients start sending commands while receiving a 'wait'.
 // This "wait" is only sent when the buffer is empty. 1 second is a good value here.
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define NO_TIMEOUTS 1000 // Milliseconds
 #endif
 
 // Some clients will have this feature soon. This could make the NO_TIMEOUTS unnecessary.
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define ADVANCED_OK
 #endif
 
@@ -2728,7 +2729,7 @@
  */
 #define HOST_ACTION_COMMANDS
 #if ENABLED(HOST_ACTION_COMMANDS)
-  #if DISABLED(MachineCR10Orig)
+  #if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
     #define HOST_PROMPT_SUPPORT
   #endif
 #endif
