@@ -96,7 +96,7 @@
 
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
-//#define DualFilSensors //Using dual filament sensors on XMax and YMAX
+#define DualFilSensors //Using dual filament sensors on XMax and YMAX
 //#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
 
 // Advanced options - Not for most users
@@ -1283,7 +1283,7 @@
  *   http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
  */
 #if DISABLED(CLASSIC_JERK)
-  #define JUNCTION_DEVIATION_MM 0.6 // (mm) Distance from real junction edge
+  #define JUNCTION_DEVIATION_MM 0.06 // (mm) Distance from real junction edge
 #endif
 
 /**
@@ -1926,8 +1926,10 @@
     #if ((ENABLED(ABL_BI)))
       #define AUTO_BED_LEVELING_BILINEAR
     #endif
-#elif (DISABLED(OrigLA))
+#elif NONE(OrigLA, MachineCRX)
   #define MESH_BED_LEVELING
+#else
+  #define ClipClearance 0
 #endif
 /**
  * Normally G28 leaves leveling disabled on completion. Enable

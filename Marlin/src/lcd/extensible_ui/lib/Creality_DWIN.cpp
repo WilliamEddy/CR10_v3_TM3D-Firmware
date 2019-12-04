@@ -225,10 +225,12 @@ void onIdle()
 				}
 				rtscheck.RTS_SndData(VolumeSet, VolumeIcon - 2);
 				rtscheck.RTS_SndData(VolumeSet << 8, SoundAddr + 1);
-        if (getLevelingActive())
-			    rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
-		    else
-			    rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
+        #if HAS_MESH
+          if (getLevelingActive())
+            rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
+          else
+            rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
+        #endif
 			}
 			if (startprogress <= 100)
 				rtscheck.RTS_SndData(startprogress, StartIcon);
@@ -1027,11 +1029,12 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.data[0] == 1) //Bed Autoleveling
       {
-        if (getLevelingActive())
-          RTS_SndData(3, AutoLevelIcon);
-        else
-          RTS_SndData(2, AutoLevelIcon);
-
+        #if HAS_MESH
+          if (getLevelingActive())
+            RTS_SndData(3, AutoLevelIcon);
+          else
+            RTS_SndData(2, AutoLevelIcon);
+        #endif
         RTS_SndData(10, FilenameIcon); //Motor Icon
         if (!isPositionKnown())
           injectCommands_P(PSTR("G28\nG1F1000Z0.0"));
@@ -1135,7 +1138,9 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         case assistEntry: // Assitant Level
         {
-          setLevelingActive(false);
+          #if HAS_MESH
+            setLevelingActive(false);
+          #endif
           if (!isPositionKnown())
             injectCommands_P((PSTR("G28\nG1 F1000 Z0.0")));
           else
@@ -1200,16 +1205,18 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         case levelOn: // Autolevel switch
         {
-          if (!getLevelingActive()) //turn on the Autolevel
-          {
-            RTS_SndData(3, AutoLevelIcon);
-            setLevelingActive(true);
-          }
-          else //turn off the Autolevel
-          {
-            RTS_SndData(2, AutoLevelIcon);
-            setLevelingActive(false);
-          }
+          #if HAS_MESH
+            if (!getLevelingActive()) //turn on the Autolevel
+            {
+              RTS_SndData(3, AutoLevelIcon);
+              setLevelingActive(true);
+            }
+            else //turn off the Autolevel
+            {
+              RTS_SndData(2, AutoLevelIcon);
+              setLevelingActive(false);
+            }
+          #endif
           RTS_SndData(getZOffset_mm() * 100, 0x1026);
           break;
         }
@@ -1787,20 +1794,22 @@ void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
   if(waitway==3)
     if(isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED)-1)))
 			  rtscheck.RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
-  uint8_t abl_probe_index = 0;
-  while (abl_probe_index < 25) {
-    // Set meshCount.x, meshCount.y based on abl_probe_index, with zig-zag
-    uint8_t x_pos = abl_probe_index / GRID_MAX_POINTS_X;
-    uint8_t y_pos = abl_probe_index - (x_pos * GRID_MAX_POINTS_X);
+  #if HAS_MESH
+    uint8_t abl_probe_index = 0;
+    while (abl_probe_index < 25) {
+      // Set meshCount.x, meshCount.y based on abl_probe_index, with zig-zag
+      uint8_t x_pos = abl_probe_index / GRID_MAX_POINTS_X;
+      uint8_t y_pos = abl_probe_index - (x_pos * GRID_MAX_POINTS_X);
 
-    // Probe in reverse order for every other row/column
-    bool zig = (x_pos & 1); // != ((PR_OUTER_END) & 1);
+      // Probe in reverse order for every other row/column
+      bool zig = (x_pos & 1); // != ((PR_OUTER_END) & 1);
 
-    if (zig) y_pos = (GRID_MAX_POINTS_X - 1) - y_pos;
-    xy_uint8_t point = {x_pos, y_pos};
-		rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + abl_probe_index * 2);
-    ++abl_probe_index;
-  }
+      if (zig) y_pos = (GRID_MAX_POINTS_X - 1) - y_pos;
+      xy_uint8_t point = {x_pos, y_pos};
+      rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + abl_probe_index * 2);
+      ++abl_probe_index;
+    }
+  #endif
 };
 
 void onStoreSettings(char *buff)
