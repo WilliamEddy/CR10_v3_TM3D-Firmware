@@ -1873,7 +1873,9 @@ void onConfigurationStoreRead(bool success)
     }
   #endif
 
-	SERIAL_ECHOLNPAIR("\n init zprobe_zoffset = ", getZOffset_mm());
+  #if HAS_MESH
+	  SERIAL_ECHOLNPAIR("\n init zprobe_zoffset = ", getZOffset_mm());
+  #endif
 	rtscheck.RTS_SndData(getZOffset_mm() * 100, 0x1026);
 }
 
