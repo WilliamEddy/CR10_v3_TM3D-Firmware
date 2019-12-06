@@ -1782,8 +1782,8 @@ void onUserConfirmRequired(const char *const msg)
 void onStatusChanged(const char *const msg)
 {
   for (int j = 0; j < 40; j++) // Clear old message
-    rtscheck.RTS_SndData(' ', 0x3000+j);
-  rtscheck.RTS_SndData(msg, 0x3000);
+    rtscheck.RTS_SndData(' ', StatusMessageString+j);
+  rtscheck.RTS_SndData(msg, StatusMessageString);
 }
 void onFactoryReset()
 {
@@ -1873,9 +1873,7 @@ void onConfigurationStoreRead(bool success)
     }
   #endif
 
-  #if HAS_MESH
-	  SERIAL_ECHOLNPAIR("\n init zprobe_zoffset = ", getZOffset_mm());
-  #endif
+	SERIAL_ECHOLNPAIR("\n init zprobe_zoffset = ", getZOffset_mm());
 	rtscheck.RTS_SndData(getZOffset_mm() * 100, 0x1026);
 }
 

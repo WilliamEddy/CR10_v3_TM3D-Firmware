@@ -84,6 +84,12 @@ namespace ExtUI {
 #define	FilenameCount		0x20DE
 #define	FilenameNature		0x6003
 
+#if ANY(MachineCR10SPro, MachineEnder5Plus, MachineCR10Max) || ENABLED(Force10SProDisplay)
+  #define StatusMessageString 0x3000
+#else
+  #define StatusMessageString 0x20E8
+#endif
+
 #if ENABLED(SKR13)
   #define DWIN_SERIAL MSerial
 #else
