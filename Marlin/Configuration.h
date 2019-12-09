@@ -11,9 +11,9 @@
 //#define MachineCR20Pro
 //#define MachineCR10S
 //#define MachineCR10SV2
-//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
-#define MachineCRX
+//#define MachineCRX
 //#define MachineCR10Max
 //#define MachineS4
 //#define MachineS5
@@ -75,7 +75,7 @@
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
 //#define ABL_NCSW //Creality ABL or Any NC Sensor
-//#define ABL_BLTOUCH
+#define ABL_BLTOUCH
 
 //#define CREALITY_ABL_MOUNT //Using creality ABL mount
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
@@ -95,8 +95,8 @@
 //#define Force10SProDisplay
 
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
-#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
-#define DualFilSensors //Using dual filament sensors on XMax and YMAX
+//#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
+//#define DualFilSensors //Using dual filament sensors on XMax and YMAX
 //#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
 
 // Advanced options - Not for most users
@@ -130,10 +130,13 @@
 //#define MachineCR10Orig // Forces Melzi board
 //#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
 //#define SKR13 // 32 bit board - assumes 2208 drivers
-//#define SKR13_2209
-//#define SKR13_UART // Configure SKR board with drivers in UART mode
+#define SKRPRO11
+//#define I2C_EEPROM  // use I2C EEPROM on SRK PRO v1.1 e.g AT24C256
+
+#define SKR_2209
+#define SKR_UART // Configure SKR board with drivers in UART mode
 //#define SKR13_ReverseSteppers // Some users reported directions backwards than others on SKR with various drivers.
-#define I2C_EEPROM  // use I2C EEPROM on SRK PRO v1.1 e.g AT24C256
+
  /*
   *
   * If any non-stock dual extruder is used, define type here
