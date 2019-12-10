@@ -315,7 +315,7 @@
   #define Z_STOP_PIN 19
 #endif
 
-#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10) && NONE(Melzi_To_SBoardUpgrade, SKR13)
+#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10) && NONE(Melzi_To_SBoardUpgrade, SKR13, SKRPRO11)
   #define MachineCR10Orig
 #endif
 
@@ -412,8 +412,8 @@
  */
 #if ENABLED(SKR13)
   #define SERIAL_PORT_2 0
-#elif ENABLED(SKRPRO11)
-  //#define SERIAL_PORT_2 1
+#elif ENABLED(SKRPRO11) && NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) && DISABLED(GraphicLCD)
+  #define SERIAL_PORT_2 1
 #endif
 /**
  * This setting determines the communication speed of the printer.
@@ -1408,7 +1408,7 @@
     #define PROBING_FANS_OFF          // Turn fans off when probing
   #endif
 
-  #if ENABLED(MachineEnder4) && DISABLED(SKR13)
+  #if ENABLED(MachineEnder4) && DISABLED(SKR13, SKRPRO11)
     #define SOLENOID_PROBE PIN_15
   #endif
 #endif
@@ -1857,8 +1857,10 @@
   #define FILAMENT_RUNOUT_SENSOR
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  #if ENABLED(DualFilSensors) && DISABLED(SKR13)
-    #define NUM_RUNOUT_SENSORS   2     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
+  #if ENABLED(DualFilSensors)
+    #if DISABLED(SKR13,SKRPRO11)
+      #define NUM_RUNOUT_SENSORS   2     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
+    #endif
     #define FIL_RUNOUT2_PIN 15
   #else
     #define NUM_RUNOUT_SENSORS   1     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.

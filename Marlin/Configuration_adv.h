@@ -1284,7 +1284,7 @@
   #define BOOT_MARLIN_LOGO_SMALL    // Show a smaller Marlin logo on the Boot Screen (saving 399 bytes of flash)
   //#define GAMES_EASTER_EGG          // Add extra blank lines above the "Games" sub-menu
 
-  #if ENABLED(SKR13)
+  #if ENABLED(SKR13, SKRPRO11)
     // Frivolous Game Options
     #define MARLIN_BRICKOUT
     #define MARLIN_INVADERS
@@ -1604,7 +1604,7 @@
  *
  * Override the default value based on the driver type set in Configuration.h.
  */
-#if ENABLED(SKR13)
+#if ENABLED(SKR13, SKRPRO11)
   #define MINIMUM_STEPPER_PULSE 1
 #endif
 /**
@@ -1739,7 +1739,7 @@
  * Note that M207 / M208 / M209 settings are saved to EEPROM.
  *
  */
- #if ENABLED(SKR13)
+ #if ENABLED(SKR13, SKRPRO11)
   #define FWRETRACT
 #endif
 #if ENABLED(FWRETRACT)
