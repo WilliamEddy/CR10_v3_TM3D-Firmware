@@ -854,10 +854,20 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
     case PrintChoice:
       if (recdat.addr == Stopprint)
       {
-        RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
-        RTS_SndData(0, Timehour);
-        RTS_SndData(0, Timemin);
-        stopPrint();
+        SERIAL_ECHOLN("StopPrint");
+        if (recdat.data[0] == 240) // no
+        {
+          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          SERIAL_ECHOLNPAIR("Stop No", recdat.data[0] );
+        }
+        else
+        {
+          RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+          RTS_SndData(0, Timehour);
+          RTS_SndData(0, Timemin);
+          SERIAL_ECHOLNPAIR("Stop Triggered", recdat.data[0] );
+          stopPrint();
+        }
       }
       else if (recdat.addr == Pauseprint)
       {
@@ -1419,7 +1429,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       if (recdat.data[0] == 1) //Filament is out, resume / resume selected on screen
       {
         if(
-        #if DISABLED(FILAMENT_RUNOUT_SENSOR)
+        #if DISABLED(FILAMENT_RUNOUT_SENSOR) || ENABLED(FILAMENT_MOTION_SENSOR)
           true
         #elif NUM_RUNOUT_SENSORS > 1
           (getActiveTool() == E0 && READ(FIL_RUNOUT_PIN) != FIL_RUNOUT_INVERTING) || (getActiveTool() == E1 && READ(FIL_RUNOUT2_PIN) != FIL_RUNOUT_INVERTING)
