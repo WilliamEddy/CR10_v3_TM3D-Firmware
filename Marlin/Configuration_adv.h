@@ -1284,7 +1284,7 @@
   #define BOOT_MARLIN_LOGO_SMALL    // Show a smaller Marlin logo on the Boot Screen (saving 399 bytes of flash)
   //#define GAMES_EASTER_EGG          // Add extra blank lines above the "Games" sub-menu
 
-  #if ENABLED(SKR13)
+  #if ENABLED(SKR13, SKRPRO11)
     // Frivolous Game Options
     #define MARLIN_BRICKOUT
     #define MARLIN_INVADERS
@@ -1467,7 +1467,7 @@
  * See http://marlinfw.org/docs/features/lin_advance.html for full instructions.
  * Mention @Sebastianv650 on GitHub to alert the author of any issues.
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, MachineCR10SV2, CrealitySilentBoard) || ENABLED(OrigLA) || ENABLED(SKR13, SKR13_UART)
+#if NONE(MachineCR10Orig, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, MachineCR10SV2, CrealitySilentBoard) || ENABLED(OrigLA) || ENABLED(SKR13, SKR_UART) || ENABLED(SKRPRO11, SKR_UART)
   #define LIN_ADVANCE
 #endif
 #if ENABLED(LIN_ADVANCE)
@@ -1604,7 +1604,7 @@
  *
  * Override the default value based on the driver type set in Configuration.h.
  */
-#if ENABLED(SKR13)
+#if ENABLED(SKR13, SKRPRO11)
   #define MINIMUM_STEPPER_PULSE 1
 #endif
 /**
@@ -1692,7 +1692,9 @@
 // enter the serial receive buffer, so they cannot be blocked.
 // Currently handles M108, M112, M410
 // Does not work on boards using AT90USB (USBCON) processors!
-#define EMERGENCY_PARSER
+#if DISABLED(SKRPRO11)
+  #define EMERGENCY_PARSER
+#endif
 
 // Bad Serial-connections can miss a received command by sending an 'ok'
 // Therefore some clients abort after 30 seconds in a timeout.
@@ -1737,7 +1739,7 @@
  * Note that M207 / M208 / M209 settings are saved to EEPROM.
  *
  */
- #if ENABLED(SKR13)
+ #if ENABLED(SKR13, SKRPRO11)
   #define FWRETRACT
 #endif
 #if ENABLED(FWRETRACT)
@@ -1967,7 +1969,7 @@
   #define INTERPOLATE       true  // Interpolate X/Y/Z_MICROSTEPS to 256
 
   #if AXIS_IS_TMC(X)
-    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT       730        // (mA) RMS current. Multiply by 1.414 for peak current.
     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for sensorless homing
     #define X_MICROSTEPS     16    // 0..256
     #define X_RSENSE          0.11
@@ -1983,7 +1985,7 @@
   #endif
 
   #if AXIS_IS_TMC(Y)
-    #define Y_CURRENT       800
+    #define Y_CURRENT       730
     #define Y_CURRENT_HOME  Y_CURRENT
     #define Y_MICROSTEPS     16
     #define Y_RSENSE          0.11
@@ -1999,7 +2001,7 @@
   #endif
 
   #if AXIS_IS_TMC(Z)
-    #define Z_CURRENT       800
+    #define Z_CURRENT       850
     #define Z_CURRENT_HOME  Z_CURRENT
     #define Z_MICROSTEPS     16
     #define Z_RSENSE          0.11
@@ -2023,7 +2025,7 @@
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      800
+    #define E0_CURRENT      730
     #define E0_MICROSTEPS    16
     #define E0_RSENSE         0.11
     #define E0_CHAIN_POS     -1
@@ -2133,7 +2135,7 @@
    */
   #define STEALTHCHOP_XY
   #define STEALTHCHOP_Z
-  #define STEALTHCHOP_E
+  //#define STEALTHCHOP_E
 
   /**
    * Optimize spreadCycle chopper parameters by using predefined parameter sets
@@ -2162,7 +2164,9 @@
    * M912 - Clear stepper driver overtemperature pre-warn condition flag.
    * M122 - Report driver parameters (Requires TMC_DEBUG)
    */
-  //#define MONITOR_DRIVER_STATUS
+  #if ENABLED(SKR_UART)
+    #define MONITOR_DRIVER_STATUS
+  #endif
 
   #if ENABLED(MONITOR_DRIVER_STATUS)
     #define CURRENT_STEP_DOWN     50  // [mA]
@@ -2179,14 +2183,14 @@
    */
   #define HYBRID_THRESHOLD
 
-  #define X_HYBRID_THRESHOLD     100  // [mm/s]
+  #define X_HYBRID_THRESHOLD     150  // [mm/s]
   #define X2_HYBRID_THRESHOLD    100
-  #define Y_HYBRID_THRESHOLD     100
+  #define Y_HYBRID_THRESHOLD     150
   #define Y2_HYBRID_THRESHOLD    100
-  #define Z_HYBRID_THRESHOLD       3
-  #define Z2_HYBRID_THRESHOLD      3
+  #define Z_HYBRID_THRESHOLD      10
+  #define Z2_HYBRID_THRESHOLD     10
   #define Z3_HYBRID_THRESHOLD      3
-  #define E0_HYBRID_THRESHOLD     30
+  #define E0_HYBRID_THRESHOLD     50
   #define E1_HYBRID_THRESHOLD     30
   #define E2_HYBRID_THRESHOLD     30
   #define E3_HYBRID_THRESHOLD     30
@@ -2243,13 +2247,15 @@
    * Beta feature!
    * Create a 50/50 square wave step pulse optimal for stepper drivers.
    */
-  //#define SQUARE_WAVE_STEPPING
+  #define SQUARE_WAVE_STEPPING
 
   /**
    * Enable M122 debugging command for TMC stepper drivers.
    * M122 S0/1 will enable continous reporting.
    */
-  //#define TMC_DEBUG
+    #if ENABLED(SKR_UART)
+      #define TMC_DEBUG
+    #endif
 
   /**
    * You can set your own advanced settings by filling in predefined functions.
