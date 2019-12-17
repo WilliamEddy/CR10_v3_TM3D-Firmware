@@ -7,6 +7,7 @@
 // Standard Atmega2560 machines (No bootloader required)
 
 //#define MachineEnder5Plus
+//#define MachineEnder4
 //#define MachineCR20 //Buzzer doesnt work
 //#define MachineCR20Pro
 //#define MachineCR10S
@@ -24,7 +25,6 @@
 
 //#define MachineEnder2
 //#define MachineEnder3
-//#define MachineEnder4
 //#define MachineEnder5
 //#define MachineMini
 //#define MachineCR10
@@ -92,12 +92,13 @@
 
 // Touchscreen options - only 32 bit boards have the open serial ports to use with graphics displays above
 //#define ForceCRXDisplay
-//#define Force10SProDisplay
+#define Force10SProDisplay
 
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
 //#define DualFilSensors //Using dual filament sensors on XMax and YMAX
 //#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
+
 
 // Advanced options - Not for most users
 
@@ -129,7 +130,7 @@
 
 //#define MachineCR10Orig // Forces Melzi board
 //#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
-#define CrealitySilentBoard // Creality board with TMC2208 Standalone drivers. Disables Linear Advance
+//#define CrealitySilentBoard // Creality board with TMC2208 Standalone drivers. Disables Linear Advance
 //#define SKR13 // 32 bit board - assumes 2208 drivers
 #define SKRPRO11
 //#define I2C_EEPROM  // use I2C EEPROM on SRK PRO v1.1 e.g AT24C256
