@@ -195,6 +195,11 @@
   #define Z_SAFE_HOMING
 #endif
 
+// NOZZLE_AS_PROBE is a subset of FIX_MOUNTED_PROBE
+#if ENABLED(NOZZLE_AS_PROBE)
+  #define FIX_MOUNTED_PROBE
+#endif
+
 /**
  * DELTA should ignore Z_SAFE_HOMING and SLOWDOWN
  */
@@ -259,6 +264,9 @@
 #elif ENABLED(AZSMZ_12864)
   #define _LCD_CONTRAST_MIN  120
   #define _LCD_CONTRAST_INIT 190
+#elif ENABLED(MKS_LCD12864B)
+  #define _LCD_CONTRAST_MIN  120
+  #define _LCD_CONTRAST_INIT 205
 #elif ENABLED(MKS_MINI_12864)
   #define _LCD_CONTRAST_MIN  120
   #define _LCD_CONTRAST_INIT 195
@@ -321,18 +329,20 @@
 #endif
 
 /**
- * Power Supply Control
+ * Power Supply
  */
 #ifndef PSU_NAME
-  #if ENABLED(PSU_CONTROL)
-    #if PSU_ACTIVE_HIGH
-      #define PSU_NAME "XBox"     // X-Box 360 (203W)
-    #else
-      #define PSU_NAME "ATX"      // ATX style
-    #endif
+  #if DISABLED(PSU_CONTROL)
+    #define PSU_NAME "Generic"  // No control
+  #elif PSU_ACTIVE_HIGH
+    #define PSU_NAME "XBox"     // X-Box 360 (203W)
   #else
-    #define PSU_NAME "Generic"    // No control
+    #define PSU_NAME "ATX"      // ATX style
   #endif
+#endif
+
+#if !defined(PSU_POWERUP_DELAY) && ENABLED(PSU_CONTROL)
+  #define PSU_POWERUP_DELAY 100
 #endif
 
 /**
@@ -1485,6 +1495,10 @@
   #undef MIN_PROBE_EDGE_RIGHT
   #undef MIN_PROBE_EDGE_FRONT
   #undef MIN_PROBE_EDGE_BACK
+  #define MIN_PROBE_EDGE_LEFT 0
+  #define MIN_PROBE_EDGE_RIGHT 0
+  #define MIN_PROBE_EDGE_FRONT 0
+  #define MIN_PROBE_EDGE_BACK 0
 #else
   #ifndef MIN_PROBE_EDGE_LEFT
     #define MIN_PROBE_EDGE_LEFT MIN_PROBE_EDGE

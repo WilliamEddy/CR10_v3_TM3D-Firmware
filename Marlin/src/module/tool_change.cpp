@@ -861,9 +861,10 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       }
     #endif // TOOLCHANGE_FILAMENT_SWAP
 
-    #if HAS_LEVELING
+    #if HAS_LEVELING && DISABLED(SINGLENOZZLE)
       // Set current position to the physical position
-      TEMPORARY_BED_LEVELING_STATE(false);
+      const bool leveling_was_enabled = planner.leveling_active;
+      set_bed_leveling_enabled(false);
     #endif
 
     if (new_tool != old_tool) {
@@ -1038,6 +1039,10 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
     } // (new_tool != old_tool)
 
     planner.synchronize();
+
+    #if HAS_LEVELING && DISABLED(SINGLENOZZLE)
+      set_bed_leveling_enabled(leveling_was_enabled);
+    #endif
 
     #if ENABLED(EXT_SOLENOID) && DISABLED(PARKING_EXTRUDER)
       disable_all_solenoids();

@@ -169,7 +169,7 @@
 #elif MB(RAMPS_DAGOMA)
   #include "ramps/pins_RAMPS_DAGOMA.h"          // ATmega2560                             env:megaatmega2560
 #elif MB(FYSETC_F6_13)
-  #include "ramps/pins_FYSETC_F6_13.h"          // ATmega2560                             env:fysetc_f6_13
+  #include "ramps/pins_FYSETC_F6_13.h"          // ATmega2560                             env:FYSETC_F6_13
 #elif MB(DUPLICATOR_I3_PLUS)
   #include "ramps/pins_DUPLICATOR_I3_PLUS.h"    // ATmega2560                             env:megaatmega2560
 #elif MB(VORON)
@@ -457,6 +457,12 @@
   #include "stm32/pins_STM3R_MINI.h"            // STM32F1                                env:STM32F103RE
 #elif MB(GTM32_PRO_VB)
   #include "stm32/pins_GTM32_PRO_VB.h"          // STM32F1                                env:STM32F103RE
+#elif MB(GTM32_MINI_A30)
+  #include "stm32/pins_GTM32_MINI_A30.h"        // STM32F1                                env:STM32F103RE
+#elif MB(GTM32_MINI)
+  #include "stm32/pins_GTM32_MINI.h"            // STM32F1                                env:STM32F103RE
+#elif MB(GTM32_REV_B)
+  #include "stm32/pins_GTM32_REV_B.h"           // STM32F1                                env:STM32F103RE
 #elif MB(MORPHEUS)
   #include "stm32/pins_MORPHEUS.h"              // STM32F1                                env:STM32F103RE
 #elif MB(CHITU3D)
@@ -487,6 +493,10 @@
   #include "stm32/pins_FYSETC_CHEETAH_V12.h"    // STM32F1                                env:STM32F103RC_fysetc
 #elif MB(LONGER3D_LK)
   #include "stm32/pins_LONGER3D_LK.h"           // STM32F1                                env:STM32F103VE_longer
+#elif MB(MKS_ROBIN_LITE3)
+  #include "stm32/pins_MKS_ROBIN_LITE3.h"       // STM32F1                                env:mks_robin_lite3
+#elif MB(MKS_ROBIN_PRO)
+  #include "stm32/pins_MKS_ROBIN_PRO.h"         // STM32F1                                env:mks_robin_pro
 
 //
 // ARM Cortex-M4F
@@ -525,7 +535,6 @@
   #include "stm32/pins_VAKE403D.h"              // STM32F4                                env:STM32F4
 #elif MB(FYSETC_S6)
   #include "stm32/pins_FYSETC_S6.h"             // STM32F4                                env:FYSETC_S6
-
 //
 // ARM Cortex M7
 //
