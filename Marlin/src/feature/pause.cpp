@@ -268,6 +268,10 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
         // Extrude filament to get into hotend
         do_pause_e_move(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE);
       }
+      #if HAS_FILAMENT_SENSOR
+        else
+          runout.reset();
+      #endif
 
       // Show "Purge More" / "Resume" menu and wait for reply
       #if ENABLED(HOST_PROMPT_SUPPORT)
@@ -692,6 +696,10 @@ void resume_print(const float &slow_load_length/*=0*/, const float &fast_load_le
 
   #if ENABLED(ADVANCED_PAUSE_FANS_PAUSE) && FAN_COUNT > 0
     thermalManager.set_fans_paused(false);
+  #endif
+
+  #if HAS_FILAMENT_SENSOR
+    runout.reset();
   #endif
 
   // Resume the print job timer if it was running
