@@ -97,7 +97,8 @@
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
 //#define DualFilSensors //Using dual filament sensors on XMax and YMAX
-#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
+//#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
+
 
 // Advanced options - Not for most users
 
@@ -131,8 +132,11 @@
 //#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
 //#define CrealitySilentBoard // Creality board with TMC2208 Standalone drivers. Disables Linear Advance
 //#define SKR13 // 32 bit board - assumes 2208 drivers
-//#define SKR13_2209
-//#define SKR13_UART // Configure SKR board with drivers in UART mode
+#define SKRPRO11
+//#define I2C_EEPROM  // use I2C EEPROM on SRK PRO v1.1 e.g AT24C256
+
+#define SKR_2209
+#define SKR_UART // Configure SKR board with drivers in UART mode
 //#define SKR13_ReverseSteppers // Some users reported directions backwards than others on SKR with various drivers.
 
  /*
@@ -312,7 +316,7 @@
   #define Z_STOP_PIN 19
 #endif
 
-#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10) && NONE(Melzi_To_SBoardUpgrade, SKR13)
+#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10) && NONE(Melzi_To_SBoardUpgrade, SKR13, SKRPRO11)
   #define MachineCR10Orig
 #endif
 
@@ -369,6 +373,13 @@
   #define SolidBedMounts
 #endif
 
+#if ENABLED(SKRPRO11)
+  #define FIL_RUNOUT_PIN   PE15
+  #if DISABLED(I2C_EEPROM)
+    #define FLASH_EEPROM_EMULATION
+  #endif
+#endif
+
 //Show the Marlin bootscreen on startup. ** ENABLE FOR PRODUCTION **
 
 #if NONE(MachineCR10Orig, MachineEnder4, MachineCR10SPro, MachineCRX, MachineCR10Max, MachineEnder5Plus) || ENABLED(GraphicLCD)
@@ -387,7 +398,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#if ENABLED(SKR13)
+#if ANY(SKR13, SKRPRO11)
   #define SERIAL_PORT -1
 #else
   #define SERIAL_PORT 0
@@ -402,6 +413,8 @@
  */
 #if ENABLED(SKR13)
   #define SERIAL_PORT_2 0
+#elif ENABLED(SKRPRO11) && NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) && DISABLED(GraphicLCD)
+  #define SERIAL_PORT_2 1
 #endif
 /**
  * This setting determines the communication speed of the printer.
@@ -421,6 +434,8 @@
 #ifndef MOTHERBOARD
   #if ENABLED(SKR13)
     #define MOTHERBOARD BOARD_BIGTREE_SKR_V1_3
+  #elif ENABLED(SKRPRO11)
+    #define MOTHERBOARD BOARD_BIGTREE_SKR_PRO_V1_1
   #elif (ENABLED(MachineCR10Orig) && DISABLED(Melzi_To_SBoardUpgrade))
     #define MOTHERBOARD BOARD_MELZI_CREALITY
   #else
@@ -1068,8 +1083,8 @@
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 
-#if ANY(SKR13, MachineCR10SV2, CrealitySilentBoard, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max) && DISABLED(SKR13_UART)
-  #if ENABLED(SKR13_2209)
+#if ANY(SKR13, SKRPRO11, MachineCR10SV2, CrealitySilentBoard, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max) && DISABLED(SKR_UART)
+  #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209_STANDALONE
     #define Y_DRIVER_TYPE  TMC2209_STANDALONE
     #define Z_DRIVER_TYPE  TMC2209_STANDALONE
@@ -1082,8 +1097,8 @@
     #define E0_DRIVER_TYPE TMC2208_STANDALONE
     #define E1_DRIVER_TYPE TMC2208_STANDALONE
   #endif
-#elif ENABLED(SKR13, SKR13_UART)
-  #if ENABLED(SKR13_2209)
+#elif ANY(SKR13, SKRPRO11) && ENABLED(SKR_UART)
+  #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209
     #define Y_DRIVER_TYPE  TMC2209
     #define Z_DRIVER_TYPE  TMC2209
@@ -1394,7 +1409,7 @@
     #define PROBING_FANS_OFF          // Turn fans off when probing
   #endif
 
-  #if ENABLED(MachineEnder4) && DISABLED(SKR13)
+  #if ENABLED(MachineEnder4) && DISABLED(SKR13, SKRPRO11)
     #define SOLENOID_PROBE PIN_15
   #endif
 #endif
@@ -1843,8 +1858,10 @@
   #define FILAMENT_RUNOUT_SENSOR
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  #if ENABLED(DualFilSensors) && DISABLED(SKR13)
-    #define NUM_RUNOUT_SENSORS   2     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
+  #if ENABLED(DualFilSensors)
+    #if DISABLED(SKR13,SKRPRO11)
+      #define NUM_RUNOUT_SENSORS   2     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
+    #endif
     #define FIL_RUNOUT2_PIN 15
   #else
     #define NUM_RUNOUT_SENSORS   1     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
