@@ -1019,14 +1019,20 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.addr == NozzlePreheat)
       {
+        SERIAL_ECHOLNPAIR("Nozzle : ", (int16_t)recdat.data[0]);
+        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setTargetTemp_celsius((float)recdat.data[0], H0);
       }
       else if (recdat.addr == BedPreheat)
       {
+        SERIAL_ECHOLNPAIR("Bed : ", (int16_t)recdat.data[0]);
+        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setTargetTemp_celsius((float)recdat.data[0], BED);
       }
       else if (recdat.addr == Flowrate)
       {
+        SERIAL_ECHOLNPAIR("Flow Target : ", (int16_t)recdat.data[0]);
+        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setFlow_percent((int16_t)recdat.data[0], getActiveTool());
       }
       break;
@@ -1806,19 +1812,18 @@ void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
 			  rtscheck.RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
   #if HAS_MESH
     uint8_t abl_probe_index = 0;
-    while (abl_probe_index < 25) {
-      // Set meshCount.x, meshCount.y based on abl_probe_index, with zig-zag
-      uint8_t x_pos = abl_probe_index / GRID_MAX_POINTS_X;
-      uint8_t y_pos = abl_probe_index - (x_pos * GRID_MAX_POINTS_X);
-
-      // Probe in reverse order for every other row/column
-      bool zig = (x_pos & 1); // != ((PR_OUTER_END) & 1);
-
-      if (zig) y_pos = (GRID_MAX_POINTS_X - 1) - y_pos;
-      xy_uint8_t point = {x_pos, y_pos};
-      rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + abl_probe_index * 2);
-      ++abl_probe_index;
-    }
+        for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
+        {
+          for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
+          {
+            uint8_t x_Point = inner;
+            bool zig = (outer & 1); // != ((PR_OUTER_END) & 1);
+            if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+            xy_uint8_t point = {x_Point, outer};
+            rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
+            ++abl_probe_index;
+          }
+        }
   #endif
 };
 
@@ -1860,19 +1865,19 @@ void onConfigurationStoreRead(bool success)
     if (ExtUI::getMeshValid())
     {
       uint8_t abl_probe_index = 0;
-      while (abl_probe_index < 25) {
-        // Set meshCount.x, meshCount.y based on abl_probe_index, with zig-zag
-        uint8_t x_pos = abl_probe_index / GRID_MAX_POINTS_X;
-        uint8_t y_pos = abl_probe_index - (x_pos * GRID_MAX_POINTS_X);
+        for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
+        {
+          for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
+          {
+            uint8_t x_Point = inner;
+            bool zig = (outer & 1);
+            if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+            xy_uint8_t point = {x_Point, outer};
+            rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
+            ++abl_probe_index;
+          }
+        }
 
-        // Probe in reverse order for every other row/column
-        bool zig = (x_pos & 1); // != ((PR_OUTER_END) & 1);
-
-        if (zig) y_pos = (GRID_MAX_POINTS_X - 1) - y_pos;
-        xy_uint8_t point = {x_pos, y_pos};
-        rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + abl_probe_index * 2);
-        ++abl_probe_index;
-      }
       rtscheck.RTS_SndData(3, AutoLevelIcon); //2=On, 3=Off
       setLevelingActive(true);
     }
