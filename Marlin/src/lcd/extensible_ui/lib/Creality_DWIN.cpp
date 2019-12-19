@@ -1817,7 +1817,8 @@ void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
             bool zig = (outer & 1); // != ((PR_OUTER_END) & 1);
             if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
             xy_uint8_t point = {x_Point, outer};
-            rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
+            if(x_Point==xpos && outer ==ypos)
+              rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
             ++abl_probe_index;
           }
         }

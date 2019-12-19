@@ -12,10 +12,10 @@
 //#define MachineCR20Pro
 //#define MachineCR10S
 //#define MachineCR10SV2
-#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
+//#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
-//#define MachineCR10Max
+#define MachineCR10Max
 //#define MachineS4
 //#define MachineS5
 //#define MachineCR2020 // Industrial Series 2020
@@ -783,11 +783,11 @@
 //#define TEMP_SENSOR_1_AS_REDUNDANT
 #define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
 
-#define TEMP_RESIDENCY_TIME     10  // (seconds) Time to wait for hotend to "settle" in M109
+#define TEMP_RESIDENCY_TIME     2  // (seconds) Time to wait for hotend to "settle" in M109
 #define TEMP_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
 #define TEMP_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
 
-#define TEMP_BED_RESIDENCY_TIME 10  // (seconds) Time to wait for bed to "settle" in M190
+#define TEMP_BED_RESIDENCY_TIME 5  // (seconds) Time to wait for bed to "settle" in M190
 #define TEMP_BED_WINDOW          1  // (°C) Temperature proximity for the "temperature reached" timer
 #define TEMP_BED_HYSTERESIS      3  // (°C) Temperature proximity considered "close enough" to the target
 
@@ -965,7 +965,7 @@
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
 #define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 500
+#define EXTRUDE_MAXLENGTH 750
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -1501,9 +1501,7 @@
  #endif
 
 // Certain types of probes need to stay away from edges
-#if ENABLED(MachineCR10Max, MachineCR10SV2)
-  #define MIN_PROBE_EDGE 15
-#elif ENABLED(ABL_BLTOUCH)
+#if ENABLED(ABL_BLTOUCH)
   #define MIN_PROBE_EDGE 3
 #else
   #define MIN_PROBE_EDGE 10
@@ -1779,7 +1777,7 @@
     #define X_BED_SIZE 315
     #define Y_BED_SIZE 308
     #define Z_MAX_POS 400
-    #define ClipClearance 25
+    #define ClipClearance 15
   #elif (ENABLED(MachineCR10SPro))
     #define X_BED_SIZE 315
     #define Y_BED_SIZE 310
@@ -1794,22 +1792,22 @@
     #define X_BED_SIZE 315
     #define Y_BED_SIZE 310
     #define Z_MAX_POS 400
-    #define ClipClearance 25
+    #define ClipClearance 15
   #elif ENABLED( MachineS4)
     #define X_BED_SIZE 410
     #define Y_BED_SIZE 400
     #define Z_MAX_POS 400
-    #define ClipClearance 35
+    #define ClipClearance 15
   #elif ENABLED(MachineCR10Max)
     #define X_BED_SIZE 475
     #define Y_BED_SIZE 450
     #define Z_MAX_POS 470
-    #define ClipClearance 35
+    #define ClipClearance 15
   #elif ENABLED(MachineS5)
     #define X_BED_SIZE 510
     #define Y_BED_SIZE 500
     #define Z_MAX_POS 500
-    #define ClipClearance 35
+    #define ClipClearance 20
   #elif ENABLED(MachineCR2020)
     #define X_BED_SIZE 200
     #define Y_BED_SIZE 202.5

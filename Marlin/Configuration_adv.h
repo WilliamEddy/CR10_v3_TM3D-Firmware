@@ -1813,6 +1813,8 @@
   #define FILAMENT_CHANGE_UNLOAD_ACCEL        25  // (mm/s^2) Lower acceleration may allow a faster feedrate.
   #if ENABLED(DirectDrive)
     #define FILAMENT_CHANGE_UNLOAD_LENGTH      125
+  #elif ANY(MachineEnder5Plus, MachineCR10Max, MachineCR10S4, MachineCR10S5)
+    #define FILAMENT_CHANGE_UNLOAD_LENGTH   700
   #else
     #define FILAMENT_CHANGE_UNLOAD_LENGTH      430  // (mm) The length of filament for a complete unload.
   #endif
@@ -1829,6 +1831,8 @@
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   100
   #elif(ENABLED(MachineCRX))
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   450  // (mm) Load length of filament, from extruder gear to nozzle.
+  #elif ANY(MachineEnder5Plus, MachineCR10Max, MachineCR10S4, MachineCR10S5)
+    #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   600
   #else
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   430  // (mm) Load length of filament, from extruder gear to nozzle.
   #endif
