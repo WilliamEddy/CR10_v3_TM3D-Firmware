@@ -58,6 +58,8 @@
  //#define EZRstruder
  //#define Bondtech
  //#define E3DTitan
+ //#define E3DHemera
+
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
 
 /*
@@ -75,7 +77,7 @@
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
 //#define ABL_NCSW //Creality ABL or Any NC Sensor
-//#define ABL_BLTOUCH
+#define ABL_BLTOUCH
 
 //#define CREALITY_ABL_MOUNT //Using creality ABL mount
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
@@ -378,6 +380,10 @@
   #if DISABLED(I2C_EEPROM)
     #define FLASH_EEPROM_EMULATION
   #endif
+#endif
+
+#if ENABLED(E3DHemera)
+ #define DirectDrive
 #endif
 
 //Show the Marlin bootscreen on startup. ** ENABLE FOR PRODUCTION **
@@ -1178,6 +1184,8 @@
 
 #if(ENABLED(Bondtech) || ENABLED(E3DTitan))
   #define EStepsmm 415
+#elif ENABLED(E3DHemera)
+  #define EStepsmm 409
 #elif ANY(EZRstruder, MachineCR10SV2)
   #define EStepsmm 93
 #elif ANY(MachineCR10SPro, MachineCR10Max)
