@@ -695,10 +695,11 @@ void RTSSHOW::RTS_HandleData()
 	{
 		if (recdat.addr == Addrbuf[i])
 		{
-			if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
-				Checkkey = PrintChoice;
-			else if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat || Addrbuf[i] == Flowrate)
+
+      if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat || Addrbuf[i] == Flowrate)
 				Checkkey = ManualSetTemp;
+			else if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
+				Checkkey = PrintChoice;
 			else if (Addrbuf[i] >= AutoZero && Addrbuf[i] <= DisplayZaxis)
 				Checkkey = XYZEaxis;
 			else if (Addrbuf[i] >= FilementUnit1 && Addrbuf[i] <= FilementUnit2)
@@ -709,6 +710,8 @@ void RTSSHOW::RTS_HandleData()
 		}
 	}
 
+  if (recdat.addr == Flowrate)
+    Checkkey = ManualSetTemp;
 	if (recdat.addr >= SDFILE_ADDR && recdat.addr <= (SDFILE_ADDR + 10 * (FileNum + 1)))
 		Checkkey = Filename;
 
@@ -1019,20 +1022,14 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.addr == NozzlePreheat)
       {
-        SERIAL_ECHOLNPAIR("Nozzle : ", (int16_t)recdat.data[0]);
-        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setTargetTemp_celsius((float)recdat.data[0], H0);
       }
       else if (recdat.addr == BedPreheat)
       {
-        SERIAL_ECHOLNPAIR("Bed : ", (int16_t)recdat.data[0]);
-        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setTargetTemp_celsius((float)recdat.data[0], BED);
       }
       else if (recdat.addr == Flowrate)
       {
-        SERIAL_ECHOLNPAIR("Flow Target : ", (int16_t)recdat.data[0]);
-        SERIAL_ECHOLNPAIR("Addr : ", (int16_t)recdat.addr);
         setFlow_percent((int16_t)recdat.data[0], getActiveTool());
       }
       break;
