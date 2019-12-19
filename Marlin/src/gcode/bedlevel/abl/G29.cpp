@@ -410,7 +410,6 @@ G29_TYPE GcodeSuite::G29() {
           parser.seenval('R') ? (int)RAW_X_POSITION(parser.value_linear_units()) : (_MIN(probe_position_lf.x + X_BED_SIZE, x_max) - MIN_PROBE_EDGE_RIGHT),
           parser.seenval('B') ? (int)RAW_Y_POSITION(parser.value_linear_units()) : (_MIN(probe_position_lf.y + Y_BED_SIZE, y_max) - MIN_PROBE_EDGE_RIGHT)
         );
-        SERIAL_ECHOLN("Set Trail 1");
       }
 
       if (
