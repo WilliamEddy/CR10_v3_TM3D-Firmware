@@ -33,7 +33,7 @@ namespace ExtUI {
 #define	ExchangepageAddr	0x0084
 #define	SoundAddr			0x00A0
 #define	StartIcon			0x1000
-#define	FeedrateDisplay		0x1006
+#define	FeedrateDisplay		0x1006 // Speed
 #define	Stopprint			0x1008
 #define	Pauseprint			0x100A
 #define	Resumeprint			0x100C
@@ -43,6 +43,7 @@ namespace ExtUI {
 #define	IconPrintstatus		0x1014
 #define	Percentage			0x1016
 #define	FanKeyIcon			0x101E
+#define Flowrate        0x1300
 
 #define	HeatPercentIcon		0x1024
 
@@ -82,6 +83,20 @@ namespace ExtUI {
 #define	Choosefilename		0x20D4
 #define	FilenameCount		0x20DE
 #define	FilenameNature		0x6003
+
+#if ANY(MachineCR10SPro, MachineEnder5Plus, MachineCR10Max) || ENABLED(Force10SProDisplay)
+  #define StatusMessageString 0x3000
+#else
+  #define StatusMessageString 0x20E8
+#endif
+
+#if ENABLED(SKR13)
+  #define DWIN_SERIAL MSerial
+#elif ENABLED(SKRPRO11)
+  #define DWIN_SERIAL Serial1
+#else
+  #define DWIN_SERIAL Serial2
+#endif
 /************struct**************/
 
 typedef struct DataBuf

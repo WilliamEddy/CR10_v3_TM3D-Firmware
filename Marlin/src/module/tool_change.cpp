@@ -861,9 +861,10 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       }
     #endif // TOOLCHANGE_FILAMENT_SWAP
 
-    #if HAS_LEVELING
+    #if HAS_LEVELING && DISABLED(SINGLENOZZLE)
       // Set current position to the physical position
-      TEMPORARY_BED_LEVELING_STATE(false);
+      const bool leveling_was_enabled = planner.leveling_active;
+      set_bed_leveling_enabled(false);
     #endif
 
     if (new_tool != old_tool) {
@@ -906,7 +907,7 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       #endif
 
       #if HAS_HOTEND_OFFSET
-        xyz_pos_t diff = hotend_offset[new_tool];
+        xyz_pos_t diff = hotend_offset[new_tool] - hotend_offset[old_tool];
         #if ENABLED(DUAL_X_CARRIAGE)
           diff.x = 0;
         #endif
@@ -929,7 +930,7 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       #elif ENABLED(SWITCHING_NOZZLE) && !SWITCHING_NOZZLE_TWO_SERVOS   // Switching Nozzle (single servo)
         // Raise by a configured distance to avoid workpiece, except with
         // SWITCHING_NOZZLE_TWO_SERVOS, as both nozzles will lift instead.
-        current_position.z += _MAX(-zdiff, 0.0) + toolchange_settings.z_raise;
+        current_position.z += _MAX(-diff.z, 0.0) + toolchange_settings.z_raise;
         #if HAS_SOFTWARE_ENDSTOPS
           NOMORE(current_position.z, soft_endstop.max.z);
         #endif
@@ -1038,6 +1039,10 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
     } // (new_tool != old_tool)
 
     planner.synchronize();
+
+    #if HAS_LEVELING && DISABLED(SINGLENOZZLE)
+      set_bed_leveling_enabled(leveling_was_enabled);
+    #endif
 
     #if ENABLED(EXT_SOLENOID) && DISABLED(PARKING_EXTRUDER)
       disable_all_solenoids();

@@ -54,13 +54,6 @@ void menu_advanced_settings();
   void menu_delta_calibrate();
 #endif
 
-static void lcd_factory_settings() {
-  settings.reset();
-  #if HAS_BUZZER
-    ui.completion_feedback();
-  #endif
-}
-
 #if ENABLED(LCD_PROGRESS_BAR_TEST)
 
   #include "../lcdprint.h"
@@ -75,7 +68,7 @@ static void lcd_factory_settings() {
     bar_percent += (int8_t)ui.encoderPosition;
     LIMIT(bar_percent, 0, 100);
     ui.encoderPosition = 0;
-    draw_menu_item_static(0, PSTR(MSG_PROGRESS_BAR_TEST), SS_CENTER|SS_INVERT);
+    MenuItem_static::draw(0, GET_TEXT(MSG_PROGRESS_BAR_TEST), SS_CENTER|SS_INVERT);
     lcd_put_int((LCD_WIDTH) / 2 - 2, LCD_HEIGHT - 2, bar_percent); lcd_put_wchar('%');
     lcd_moveto(0, LCD_HEIGHT - 1); ui.draw_progress_bar(bar_percent);
   }
@@ -137,7 +130,7 @@ static void lcd_factory_settings() {
 
     auto _recalc_offsets = []{
       if (active_extruder && all_axes_known()) {  // For the 2nd extruder re-home so the next tool-change gets the new offsets.
-        queue.inject_P(PSTR("G28")); // In future, we can babystep the 2nd extruder (if active), making homing unnecessary.
+        queue.inject_P(G28_STR); // In future, we can babystep the 2nd extruder (if active), making homing unnecessary.
         active_extruder = 0;
       }
     };
@@ -145,12 +138,12 @@ static void lcd_factory_settings() {
     START_MENU();
     BACK_ITEM(MSG_CONFIGURATION);
     #if ENABLED(DUAL_X_CARRIAGE)
-      EDIT_ITEM_FAST(float51, MSG_X_OFFSET, &hotend_offset[1].x, float(X2_HOME_POS - 25), float(X2_HOME_POS + 25), _recalc_offsets);
+      EDIT_ITEM_FAST(float51, MSG_HOTEND_OFFSET_X, &hotend_offset[1].x, float(X2_HOME_POS - 25), float(X2_HOME_POS + 25), _recalc_offsets);
     #else
-      EDIT_ITEM_FAST(float52sign, MSG_X_OFFSET, &hotend_offset[1].x, -99.0, 99.0, _recalc_offsets);
+      EDIT_ITEM_FAST(float41sign, MSG_HOTEND_OFFSET_X, &hotend_offset[1].x, -99.0, 99.0, _recalc_offsets);
     #endif
-    EDIT_ITEM_FAST(float52sign, MSG_Y_OFFSET, &hotend_offset[1].y, -99.0, 99.0, _recalc_offsets);
-    EDIT_ITEM_FAST(float52sign, MSG_Z_OFFSET, &hotend_offset[1].z, Z_PROBE_LOW_POINT, 10.0, _recalc_offsets);
+    EDIT_ITEM_FAST(float41sign, MSG_HOTEND_OFFSET_Y, &hotend_offset[1].y, -99.0, 99.0, _recalc_offsets);
+    EDIT_ITEM_FAST(float41sign, MSG_HOTEND_OFFSET_Z, &hotend_offset[1].z, Z_PROBE_LOW_POINT, 10.0, _recalc_offsets);
     #if ENABLED(EEPROM_SETTINGS)
       ACTION_ITEM(MSG_STORE_EEPROM, lcd_store_settings);
     #endif
@@ -166,12 +159,10 @@ static void lcd_factory_settings() {
 
     GCODES_ITEM(MSG_IDEX_MODE_AUTOPARK,  PSTR("M605 S1\nG28 X\nG1 X100"));
     const bool need_g28 = !(TEST(axis_known_position, Y_AXIS) && TEST(axis_known_position, Z_AXIS));
-
     GCODES_ITEM(MSG_IDEX_MODE_DUPLICATE, need_g28
       ? PSTR("M605 S1\nT0\nG28\nM605 S2 X200\nG28 X\nG1 X100")                // If Y or Z is not homed, do a full G28 first
       : PSTR("M605 S1\nT0\nM605 S2 X200\nG28 X\nG1 X100")
     );
-
     GCODES_ITEM(MSG_IDEX_MODE_MIRRORED_COPY, need_g28
       ? PSTR("M605 S1\nT0\nG28\nM605 S2 X200\nG28 X\nG1 X100\nM605 S3 X200")  // If Y or Z is not homed, do a full G28 first
       : PSTR("M605 S1\nT0\nM605 S2 X200\nG28 X\nG1 X100\nM605 S3 X200")
@@ -211,19 +202,11 @@ static void lcd_factory_settings() {
     ACTION_ITEM(MSG_BLTOUCH_STOW, bltouch._stow);
     ACTION_ITEM(MSG_BLTOUCH_SW_MODE, bltouch._set_SW_mode);
     #if ENABLED(BLTOUCH_LCD_VOLTAGE_MENU)
-      SUBMENU(MSG_BLTOUCH_5V_MODE, []{
-        do_select_screen(PSTR(MSG_BLTOUCH_5V_MODE), PSTR(MSG_BUTTON_CANCEL), bltouch._set_5V_mode, ui.goto_previous_screen, PSTR(MSG_BLTOUCH_MODE_CHANGE));
-      });
-      SUBMENU(MSG_BLTOUCH_OD_MODE, []{
-        do_select_screen(PSTR(MSG_BLTOUCH_OD_MODE), PSTR(MSG_BUTTON_CANCEL), bltouch._set_OD_mode, ui.goto_previous_screen, PSTR(MSG_BLTOUCH_MODE_CHANGE));
-      });
+      CONFIRM_ITEM(MSG_BLTOUCH_5V_MODE, MSG_BLTOUCH_5V_MODE, MSG_BUTTON_CANCEL, bltouch._set_5V_mode, ui.goto_previous_screen, GET_TEXT(MSG_BLTOUCH_MODE_CHANGE));
+      CONFIRM_ITEM(MSG_BLTOUCH_OD_MODE, MSG_BLTOUCH_OD_MODE, MSG_BUTTON_CANCEL, bltouch._set_OD_mode, ui.goto_previous_screen, GET_TEXT(MSG_BLTOUCH_MODE_CHANGE));
       ACTION_ITEM(MSG_BLTOUCH_MODE_STORE, bltouch._mode_store);
-      SUBMENU(MSG_BLTOUCH_MODE_STORE_5V, []{
-        do_select_screen(PSTR(MSG_BLTOUCH_MODE_STORE_5V), PSTR(MSG_BUTTON_CANCEL), bltouch.mode_conv_5V, ui.goto_previous_screen, PSTR(MSG_BLTOUCH_MODE_CHANGE));
-      });
-      SUBMENU(MSG_BLTOUCH_MODE_STORE_OD, []{
-        do_select_screen(PSTR(MSG_BLTOUCH_MODE_STORE_OD), PSTR(MSG_BUTTON_CANCEL), bltouch.mode_conv_OD, ui.goto_previous_screen, PSTR(MSG_BLTOUCH_MODE_CHANGE));
-      });
+      CONFIRM_ITEM(MSG_BLTOUCH_MODE_STORE_5V, MSG_BLTOUCH_MODE_STORE_5V, MSG_BUTTON_CANCEL, bltouch.mode_conv_5V, ui.goto_previous_screen, GET_TEXT(MSG_BLTOUCH_MODE_CHANGE));
+      CONFIRM_ITEM(MSG_BLTOUCH_MODE_STORE_OD, MSG_BLTOUCH_MODE_STORE_OD, MSG_BUTTON_CANCEL, bltouch.mode_conv_OD, ui.goto_previous_screen, GET_TEXT(MSG_BLTOUCH_MODE_CHANGE));
       ACTION_ITEM(MSG_BLTOUCH_MODE_ECHO, bltouch_report);
     #endif
     END_MENU();
@@ -253,7 +236,7 @@ static void lcd_factory_settings() {
     void menu_case_light() {
       START_MENU();
       BACK_ITEM(MSG_CONFIGURATION);
-      EDIT_ITEM(uint8, MSG_CASE_LIGHT_BRIGHTNESS, &case_light_brightness, 0, 255, update_case_light, true);
+      EDIT_ITEM(percent, MSG_CASE_LIGHT_BRIGHTNESS, &case_light_brightness, 0, 255, update_case_light, true);
       EDIT_ITEM(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);
       END_MENU();
     }
@@ -294,25 +277,10 @@ static void lcd_factory_settings() {
 #if DISABLED(SLIM_LCD_MENUS)
 
   void _menu_configuration_preheat_settings(const uint8_t material) {
-    #if HOTENDS > 5
-      #define MINTEMP_ALL _MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP, HEATER_5_MINTEMP)
-      #define MAXTEMP_ALL _MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP, HEATER_5_MAXTEMP)
-    #elif HOTENDS > 4
-      #define MINTEMP_ALL _MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP)
-      #define MAXTEMP_ALL _MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP)
-    #elif HOTENDS > 3
-      #define MINTEMP_ALL _MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP)
-      #define MAXTEMP_ALL _MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP)
-    #elif HOTENDS > 2
-      #define MINTEMP_ALL _MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP)
-      #define MAXTEMP_ALL _MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP)
-    #elif HOTENDS > 1
-      #define MINTEMP_ALL _MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP)
-      #define MAXTEMP_ALL _MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP)
-    #else
-      #define MINTEMP_ALL HEATER_0_MINTEMP
-      #define MAXTEMP_ALL HEATER_0_MAXTEMP
-    #endif
+    #define _MINTEMP_ITEM(N) HEATER_##N##_MINTEMP,
+    #define _MAXTEMP_ITEM(N) HEATER_##N##_MAXTEMP,
+    #define MINTEMP_ALL _MIN(REPEAT(HOTENDS, _MINTEMP_ITEM) 999)
+    #define MAXTEMP_ALL _MAX(REPEAT(HOTENDS, _MAXTEMP_ITEM) 0)
     START_MENU();
     BACK_ITEM(MSG_CONFIGURATION);
     EDIT_ITEM(percent, MSG_FAN_SPEED, &ui.preheat_fan_speed[material], 0, 255);
@@ -425,7 +393,12 @@ void menu_configuration() {
   #endif
 
   if (!busy)
-    ACTION_ITEM(MSG_RESTORE_FAILSAFE, lcd_factory_settings);
+    ACTION_ITEM(MSG_RESTORE_FAILSAFE, []{
+      settings.reset();
+      #if HAS_BUZZER
+        ui.completion_feedback();
+      #endif
+    });
 
   END_MENU();
 }

@@ -140,7 +140,7 @@
   #define THERMAL_PROTECTION_PERIOD 60        // Seconds
   #define THERMAL_PROTECTION_HYSTERESIS 10     // Degrees Celsius
 
-  #if DISABLED(MachineCR10Orig)
+  #if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
     #define ADAPTIVE_FAN_SLOWING              // Slow part cooling fan if temperature drops
   #endif
   #if BOTH(ADAPTIVE_FAN_SLOWING, PIDTEMP)
@@ -218,6 +218,56 @@
     #define DEFAULT_Kc (100) //heating power=Kc*(e_speed)
     #define LPQ_MAX_LEN 50
   #endif
+
+  /**
+   * Add an experimental additional term to the heater power, proportional to the fan speed.
+   * A well-chosen Kf value should add just enough power to compensate for power-loss from the cooling fan.
+   * You can either just add a constant compensation with the DEFAULT_Kf value
+   * or follow the instruction below to get speed-dependent compensation.
+   *
+   * Constant compensation (use only with fanspeeds of 0% and 100%)
+   * ---------------------------------------------------------------------
+   * A good starting point for the Kf-value comes from the calculation:
+   *   kf = (power_fan * eff_fan) / power_heater * 255
+   * where eff_fan is between 0.0 and 1.0, based on fan-efficiency and airflow to the nozzle / heater.
+   *
+   * Example:
+   *   Heater: 40W, Fan: 0.1A * 24V = 2.4W, eff_fan = 0.8
+   *   Kf = (2.4W * 0.8) / 40W * 255 = 12.24
+   *
+   * Fan-speed dependent compensation
+   * --------------------------------
+   * 1. To find a good Kf value, set the hotend temperature, wait for it to settle, and enable the fan (100%).
+   *    Make sure PID_FAN_SCALING_LIN_FACTOR is 0 and PID_FAN_SCALING_ALTERNATIVE_DEFINITION is not enabled.
+   *    If you see the temperature drop repeat the test, increasing the Kf value slowly, until the temperature
+   *    drop goes away. If the temperature overshoots after enabling the fan, the Kf value is too big.
+   * 2. Note the Kf-value for fan-speed at 100%
+   * 3. Determine a good value for PID_FAN_SCALING_MIN_SPEED, which is around the speed, where the fan starts moving.
+   * 4. Repeat step 1. and 2. for this fan speed.
+   * 5. Enable PID_FAN_SCALING_ALTERNATIVE_DEFINITION and enter the two identified Kf-values in
+   *    PID_FAN_SCALING_AT_FULL_SPEED and PID_FAN_SCALING_AT_MIN_SPEED. Enter the minimum speed in PID_FAN_SCALING_MIN_SPEED
+   */
+  //#define PID_FAN_SCALING
+  #if ENABLED(PID_FAN_SCALING)
+    //#define PID_FAN_SCALING_ALTERNATIVE_DEFINITION
+    #if ENABLED(PID_FAN_SCALING_ALTERNATIVE_DEFINITION)
+      // The alternative definition is used for an easier configuration.
+      // Just figure out Kf at fullspeed (255) and PID_FAN_SCALING_MIN_SPEED.
+      // DEFAULT_Kf and PID_FAN_SCALING_LIN_FACTOR are calculated accordingly.
+
+      #define PID_FAN_SCALING_AT_FULL_SPEED 13.0        //=PID_FAN_SCALING_LIN_FACTOR*255+DEFAULT_Kf
+      #define PID_FAN_SCALING_AT_MIN_SPEED 6.0          //=PID_FAN_SCALING_LIN_FACTOR*PID_FAN_SCALING_MIN_SPEED+DEFAULT_Kf
+      #define PID_FAN_SCALING_MIN_SPEED 10.0            // Minimum fan speed at which to enable PID_FAN_SCALING
+
+      #define DEFAULT_Kf (255.0*PID_FAN_SCALING_AT_MIN_SPEED-PID_FAN_SCALING_AT_FULL_SPEED*PID_FAN_SCALING_MIN_SPEED)/(255.0-PID_FAN_SCALING_MIN_SPEED)
+      #define PID_FAN_SCALING_LIN_FACTOR (PID_FAN_SCALING_AT_FULL_SPEED-DEFAULT_Kf)/255.0
+
+    #else
+      #define PID_FAN_SCALING_LIN_FACTOR (0)             // Power loss due to cooling = Kf * (fan_speed)
+      #define DEFAULT_Kf 10                              // A constant value added to the PID-tuner
+      #define PID_FAN_SCALING_MIN_SPEED 10               // Minimum fan speed at which to enable PID_FAN_SCALING
+    #endif
+  #endif
 #endif
 
 /**
@@ -230,14 +280,14 @@
  * Also, if the temperature is set to a value below mintemp, it will not be changed by autotemp.
  * On an Ultimaker, some initial testing worked with M109 S215 B260 F1 in the start.gcode
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define AUTOTEMP
 #endif
 #if ENABLED(AUTOTEMP)
   #define AUTOTEMP_OLDWEIGHT 0.98
 #endif
 
-// Show extra position information in M114
+// Show extra position information with 'M114 D'
 #if NONE(MachineCR10Orig, LowMemoryBoard)
   #define M114_DETAIL
 #endif
@@ -303,15 +353,19 @@
  */
 //#define USE_CONTROLLER_FAN
 #if ENABLED(USE_CONTROLLER_FAN)
-  //#define CONTROLLER_FAN_PIN -1        // Set a custom pin for the controller fan
-  #define CONTROLLERFAN_SECS 60          // Duration in seconds for the fan to run after all motors are disabled
-  #define CONTROLLERFAN_SPEED 255        // 255 == full speed
+  //#define CONTROLLER_FAN_PIN -1           // Set a custom pin for the controller fan
+  #define CONTROLLERFAN_SECS 60             // Duration in seconds for the fan to run after all motors are disabled
+  #define CONTROLLERFAN_SPEED 255           // 255 == full speed
+  //#define CONTROLLERFAN_SPEED_Z_ONLY 127  // Reduce noise on machines that keep Z enabled
 #endif
 
 // When first starting the main fan, run it at full speed for the
 // given number of milliseconds.  This gets the fan spinning reliably
 // before setting a PWM value. (Does not work with software PWM for fan on Sanguinololu)
 #define FAN_KICKSTART_TIME 100
+
+// Some coolers may require a non-zero "off" state.
+//#define FAN_OFF_PWM  1
 
 /**
  * PWM Fan Scaling
@@ -408,7 +462,9 @@
   #define INVERT_CASE_LIGHT false             // Set true if Case Light is ON when pin is LOW
   #define CASE_LIGHT_DEFAULT_ON true          // Set default power-up state on
   #define CASE_LIGHT_DEFAULT_BRIGHTNESS 255   // Set default power-up brightness (0-255, requires PWM pin)
-  #define CASE_LIGHT_MENU              // Add a Case Light option to the LCD main menu
+  //#define CASE_LIGHT_MAX_PWM 128            // Limit pwm
+  #define CASE_LIGHT_MENU                   // Add Case Light options to the LCD menu
+  //#define CASE_LIGHT_NO_BRIGHTNESS          // Disable brightness control. Enable for non-PWM lighting.
   //#define CASE_LIGHT_USE_NEOPIXEL           // Use Neopixel LED as case light, requires NEOPIXEL_LED.
   #if ENABLED(CASE_LIGHT_USE_NEOPIXEL)
     #define CASE_LIGHT_NEOPIXEL_COLOR { 255, 255, 255, 255 } // { Red, Green, Blue, White }
@@ -632,18 +688,32 @@
 //#define Z_STEPPER_AUTO_ALIGN
 #if ENABLED(Z_STEPPER_AUTO_ALIGN)
   // Define probe X and Y positions for Z1, Z2 [, Z3]
-  #define Z_STEPPER_ALIGN_XY { {  10, 290 }, { 150,  10 }, { 290, 290 } }  // Set number of iterations to align
+  #define Z_STEPPER_ALIGN_XY { {  10, 290 }, { 150,  10 }, { 290, 290 } }
+
+  // Provide Z stepper positions for more rapid convergence in bed alignment.
+  // Currently requires triple stepper drivers.
+  //#define Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS
+  #if ENABLED(Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS)
+    // Define Stepper XY positions for Z1, Z2, Z3 corresponding to
+    // the Z screw positions in the bed carriage.
+    // Define one position per Z stepper in stepper driver order.
+    #define Z_STEPPER_ALIGN_STEPPER_XY { { 210.7, 102.5 }, { 152.6, 220.0 }, { 94.5, 102.5 } }
+  #else
+    // Amplification factor. Used to scale the correction step up or down.
+    // In case the stepper (spindle) position is further out than the test point.
+    // Use a value > 1. NOTE: This may cause instability
+    #define Z_STEPPER_ALIGN_AMP 1.0
+  #endif
+
+  // Set number of iterations to align
   #define Z_STEPPER_ALIGN_ITERATIONS 3
+
   // Enable to restore leveling setup after operation
   #define RESTORE_LEVELING_AFTER_G34
 
   // On a 300mm bed a 5% grade would give a misalignment of ~1.5cm
   #define G34_MAX_GRADE  5  // (%) Maximum incline G34 will handle
 
-  // Use the amplification factor to de-/increase correction step.
-  // In case the stepper (spindle) position is further out than the test point
-  // Use a value > 1. NOTE: This may cause instability
-  #define Z_STEPPER_ALIGN_AMP 1.0
   // Stop criterion. If the accuracy is better than this stop iterating early
   #define Z_STEPPER_ALIGN_ACC 0.02
 #endif
@@ -916,14 +986,25 @@
 
   // On the Info Screen, display XY with one decimal place when possible
   #define LCD_DECIMAL_SMALL_XY
-#endif
-// The timeout (in ms) to return to the status screen from sub-menus
-#define LCD_TIMEOUT_TO_STATUS 15000
 
-// Add an 'M73' G-code to set the current percentage
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+  // The timeout (in ms) to return to the status screen from sub-menus
+  #define LCD_TIMEOUT_TO_STATUS 15000
+
+  // Add an 'M73' G-code to set the current percentage
   #define LCD_SET_PROGRESS_MANUALLY
 #endif
+// Show the E position (filament used) during printing
+//#define LCD_SHOW_E_TOTAL
+
+#if HAS_GRAPHICAL_LCD && HAS_PRINT_PROGRESS
+  //#define PRINT_PROGRESS_SHOW_DECIMALS // Show progress with decimal digits
+  //#define SHOW_REMAINING_TIME          // Display estimated time to completion
+  #if ENABLED(SHOW_REMAINING_TIME)
+    //#define USE_M73_REMAINING_TIME     // Use remaining time from M73 command instead of estimation
+    //#define ROTATE_PROGRESS_DISPLAY    // Display (P)rogress, (E)lapsed, and (R)emaining time
+  #endif
+#endif
+
 #if HAS_CHARACTER_LCD && HAS_PRINT_PROGRESS
   #define LCD_PROGRESS_BAR              // Show a progress bar on HD44780 LCDs for SD printing
   #if ENABLED(LCD_PROGRESS_BAR)
@@ -969,6 +1050,8 @@
    */
   //#define POWER_LOSS_RECOVERY
   #if ENABLED(POWER_LOSS_RECOVERY)
+    //#define BACKUP_POWER_SUPPLY       // Backup power / UPS to move the steppers on power loss
+    //#define POWER_LOSS_ZRAISE       2 // (mm) Z axis raise on resume (on power loss with UPS)
     //#define POWER_LOSS_PIN         44 // Pin to detect power loss
     //#define POWER_LOSS_STATE     HIGH // State of pin indicating power loss
     //#define POWER_LOSS_PULL           // Set pullup / pulldown as appropriate
@@ -1201,7 +1284,7 @@
   #define BOOT_MARLIN_LOGO_SMALL    // Show a smaller Marlin logo on the Boot Screen (saving 399 bytes of flash)
   //#define GAMES_EASTER_EGG          // Add extra blank lines above the "Games" sub-menu
 
-  #if ENABLED(SKR13)
+  #if ENABLED(SKR13, SKRPRO11)
     // Frivolous Game Options
     #define MARLIN_BRICKOUT
     #define MARLIN_INVADERS
@@ -1210,9 +1293,9 @@
 #endif // HAS_GRAPHICAL_LCD
 
 //
-// Lulzbot Touch UI
+// Touch UI for the FTDI Embedded Video Engine (EVE)
 //
-#if ENABLED(LULZBOT_TOUCH_UI)
+#if ENABLED(TOUCH_UI_FTDI_EVE)
   // Display board used
   //#define LCD_FTDI_VM800B35A        // FTDI 3.5" with FT800 (320x240)
   //#define LCD_4DSYSTEMS_4DLCD_FT843 // 4D Systems 4.3" (480x272)
@@ -1290,6 +1373,9 @@
 
   // Output extra debug info for Touch UI events
   //#define TOUCH_UI_DEBUG
+
+  // Developer menu (accessed by touching "About Printer" copyright text)
+  //#define TOUCH_UI_DEVELOPER_MENU
 #endif
 
 //
@@ -1334,7 +1420,8 @@
   //#define BABYSTEP_WITHOUT_HOMING
   //#define BABYSTEP_XY                     // Also enable X/Y Babystepping. Not supported on DELTA!
   #define BABYSTEP_INVERT_Z false           // Change if Z babysteps should go the other way
-  #define BABYSTEP_MULTIPLICATOR 10         // Babysteps are very small. Increase for faster motion.
+  #define BABYSTEP_MULTIPLICATOR_Z  10       // Babysteps are very small. Increase for faster motion.
+  #define BABYSTEP_MULTIPLICATOR_XY 1
 
   #define DOUBLECLICK_FOR_Z_BABYSTEPPING  // Double-click on the Status Screen for Z Babystepping.
   #if ENABLED(DOUBLECLICK_FOR_Z_BABYSTEPPING)
@@ -1347,7 +1434,7 @@
     #endif
   #endif
 
-  #if ENABLED(EXTENSIBLE_UI)
+  #if ENABLED(EXTENSIBLE_UI) && NONE(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH)
     #define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
   #endif
 
@@ -1380,7 +1467,7 @@
  * See http://marlinfw.org/docs/features/lin_advance.html for full instructions.
  * Mention @Sebastianv650 on GitHub to alert the author of any issues.
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, MachineCR10SV2) || ENABLED(OrigLA) || ENABLED(SKR13, SKR13_UART)
+#if NONE(MachineCR10Orig, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, MachineCR10SV2, CrealitySilentBoard) || ENABLED(OrigLA) || ENABLED(SKR13, SKR_UART) || ENABLED(SKRPRO11, SKR_UART)
   #define LIN_ADVANCE
 #endif
 #if ENABLED(LIN_ADVANCE)
@@ -1517,7 +1604,7 @@
  *
  * Override the default value based on the driver type set in Configuration.h.
  */
-#if ENABLED(SKR13)
+#if ENABLED(SKR13, SKRPRO11)
   #define MINIMUM_STEPPER_PULSE 1
 #endif
 /**
@@ -1560,6 +1647,7 @@
 // @section serial
 
 // The ASCII buffer for serial input
+
 #define MAX_CMD_SIZE 96
 #if(ENABLED(MachineCR10Orig) || ENABLED(LowMemoryBoard))
 #define BUFSIZE 2
@@ -1604,18 +1692,20 @@
 // enter the serial receive buffer, so they cannot be blocked.
 // Currently handles M108, M112, M410
 // Does not work on boards using AT90USB (USBCON) processors!
-#define EMERGENCY_PARSER
+#if DISABLED(SKRPRO11)
+  #define EMERGENCY_PARSER
+#endif
 
 // Bad Serial-connections can miss a received command by sending an 'ok'
 // Therefore some clients abort after 30 seconds in a timeout.
 // Some other clients start sending commands while receiving a 'wait'.
 // This "wait" is only sent when the buffer is empty. 1 second is a good value here.
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define NO_TIMEOUTS 1000 // Milliseconds
 #endif
 
 // Some clients will have this feature soon. This could make the NO_TIMEOUTS unnecessary.
-#if NONE(MachineCR10Orig, LowMemoryBoard)
+#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
   #define ADVANCED_OK
 #endif
 
@@ -1649,7 +1739,7 @@
  * Note that M207 / M208 / M209 settings are saved to EEPROM.
  *
  */
- #if ENABLED(SKR13)
+ #if ENABLED(SKR13, SKRPRO11)
   #define FWRETRACT
 #endif
 #if ENABLED(FWRETRACT)
@@ -1715,10 +1805,16 @@
   #define PAUSE_PARK_RETRACT_FEEDRATE         60  // (mm/s) Initial retract feedrate.
   #define PAUSE_PARK_RETRACT_LENGTH            4  // (mm) Initial retract.
                                                   // This short retract is done immediately, before parking the nozzle.
-  #define FILAMENT_CHANGE_UNLOAD_FEEDRATE     41  // (mm/s) Unload filament feedrate. This can be pretty fast.
+  #if ANY(MachineCR10SPro, MachineCR10SProV2, MachineCR10Max)
+    #define FILAMENT_CHANGE_UNLOAD_FEEDRATE     20  // (mm/s) Unload filament feedrate. This can be pretty fast.
+  #else
+    #define FILAMENT_CHANGE_UNLOAD_FEEDRATE     40  // (mm/s) Unload filament feedrate. This can be pretty fast.
+  #endif
   #define FILAMENT_CHANGE_UNLOAD_ACCEL        25  // (mm/s^2) Lower acceleration may allow a faster feedrate.
   #if ENABLED(DirectDrive)
     #define FILAMENT_CHANGE_UNLOAD_LENGTH      125
+  #elif ANY(MachineEnder5Plus, MachineCR10Max, MachineCR10S4, MachineCR10S5)
+    #define FILAMENT_CHANGE_UNLOAD_LENGTH   700
   #else
     #define FILAMENT_CHANGE_UNLOAD_LENGTH      430  // (mm) The length of filament for a complete unload.
   #endif
@@ -1728,13 +1824,15 @@
   #define FILAMENT_CHANGE_SLOW_LOAD_FEEDRATE   6  // (mm/s) Slow move when starting load.
   #define FILAMENT_CHANGE_SLOW_LOAD_LENGTH     0  // (mm) Slow length, to allow time to insert material.
                                                   // 0 to disable start loading and skip to fast load only
-  #define FILAMENT_CHANGE_FAST_LOAD_FEEDRATE  30  // (mm/s) Load filament feedrate. This can be pretty fast.
-  #define FILAMENT_CHANGE_FAST_LOAD_ACCEL     25  // (mm/s^2) Lower acceleration may allow a faster feedrate.
+  #define FILAMENT_CHANGE_FAST_LOAD_FEEDRATE  20  // (mm/s) Load filament feedrate. This can be pretty fast.
+  #define FILAMENT_CHANGE_FAST_LOAD_ACCEL     15  // (mm/s^2) Lower acceleration may allow a faster feedrate.
 
   #if ENABLED(DirectDrive)
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   100
   #elif(ENABLED(MachineCRX))
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   450  // (mm) Load length of filament, from extruder gear to nozzle.
+  #elif ANY(MachineEnder5Plus, MachineCR10Max, MachineCR10S4, MachineCR10S5)
+    #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   600
   #else
     #define FILAMENT_CHANGE_FAST_LOAD_LENGTH   430  // (mm) Load length of filament, from extruder gear to nozzle.
   #endif
@@ -1750,8 +1848,8 @@
   #define ADVANCED_PAUSE_FANS_PAUSE             // Turn off print-cooling fans while the machine is paused.
 
                                                   // Filament Unload does a Retract, Delay, and Purge first:
-  #define FILAMENT_UNLOAD_RETRACT_LENGTH       4  // (mm) Unload initial retract length.
-  #define FILAMENT_UNLOAD_DELAY             5000  // (ms) Delay for the filament to cool after retract.
+  #define FILAMENT_UNLOAD_PURGE_RETRACT        4  // (mm) Unload initial retract length.
+  #define FILAMENT_UNLOAD_PURGE_DELAY       5000  // (ms) Delay for the filament to cool after retract.
   #define FILAMENT_UNLOAD_PURGE_LENGTH         0  // (mm) An unretract is done, then this length is purged.
   #define PAUSE_PARK_NOZZLE_TIMEOUT           45  // (seconds) Time limit before the nozzle is turned off for safety.
   #define FILAMENT_CHANGE_ALERT_BEEPS          2  // Number of alert beeps to play when a response is needed.
@@ -1879,94 +1977,101 @@
   #define INTERPOLATE       true  // Interpolate X/Y/Z_MICROSTEPS to 256
 
   #if AXIS_IS_TMC(X)
-    #define X_CURRENT     800  // (mA) RMS current. Multiply by 1.414 for peak current.
-    #define X_MICROSTEPS   16  // 0..256
-    #define X_RSENSE     0.11
-    #define X_CHAIN_POS    -1  // <=0 : Not chained. 1 : MCU MOSI connected. 2 : Next in chain, ...
+    #define X_CURRENT       730        // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for sensorless homing
+    #define X_MICROSTEPS     16    // 0..256
+    #define X_RSENSE          0.11
+    #define X_CHAIN_POS      -1    // <=0 : Not chained. 1 : MCU MOSI connected. 2 : Next in chain, ...
   #endif
 
   #if AXIS_IS_TMC(X2)
-    #define X2_CURRENT    800
-    #define X2_MICROSTEPS  16
-    #define X2_RSENSE    0.11
-    #define X2_CHAIN_POS   -1
+    #define X2_CURRENT      800
+    #define X2_CURRENT_HOME X2_CURRENT
+    #define X2_MICROSTEPS    16
+    #define X2_RSENSE         0.11
+    #define X2_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(Y)
-    #define Y_CURRENT     800
-    #define Y_MICROSTEPS   16
-    #define Y_RSENSE     0.11
-    #define Y_CHAIN_POS    -1
+    #define Y_CURRENT       730
+    #define Y_CURRENT_HOME  Y_CURRENT
+    #define Y_MICROSTEPS     16
+    #define Y_RSENSE          0.11
+    #define Y_CHAIN_POS      -1
   #endif
 
   #if AXIS_IS_TMC(Y2)
-    #define Y2_CURRENT    800
-    #define Y2_MICROSTEPS  16
-    #define Y2_RSENSE    0.11
-    #define Y2_CHAIN_POS   -1
+    #define Y2_CURRENT      800
+    #define Y2_CURRENT_HOME Y2_CURRENT
+    #define Y2_MICROSTEPS    16
+    #define Y2_RSENSE         0.11
+    #define Y2_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(Z)
-    #define Z_CURRENT     800
-    #define Z_MICROSTEPS   16
-    #define Z_RSENSE     0.11
-    #define Z_CHAIN_POS    -1
+    #define Z_CURRENT       850
+    #define Z_CURRENT_HOME  Z_CURRENT
+    #define Z_MICROSTEPS     16
+    #define Z_RSENSE          0.11
+    #define Z_CHAIN_POS      -1
   #endif
 
   #if AXIS_IS_TMC(Z2)
-    #define Z2_CURRENT    800
-    #define Z2_MICROSTEPS  16
-    #define Z2_RSENSE    0.11
-    #define Z2_CHAIN_POS   -1
+    #define Z2_CURRENT      800
+    #define Z2_CURRENT_HOME Z2_CURRENT
+    #define Z2_MICROSTEPS    16
+    #define Z2_RSENSE         0.11
+    #define Z2_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(Z3)
-    #define Z3_CURRENT    800
-    #define Z3_MICROSTEPS  16
-    #define Z3_RSENSE    0.11
-    #define Z3_CHAIN_POS   -1
+    #define Z3_CURRENT      800
+    #define Z3_CURRENT_HOME Z3_CURRENT
+    #define Z3_MICROSTEPS    16
+    #define Z3_RSENSE         0.11
+    #define Z3_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT    800
-    #define E0_MICROSTEPS  16
-    #define E0_RSENSE    0.11
-    #define E0_CHAIN_POS   -1
+    #define E0_CURRENT      730
+    #define E0_MICROSTEPS    16
+    #define E0_RSENSE         0.11
+    #define E0_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E1)
-    #define E1_CURRENT    800
-    #define E1_MICROSTEPS  16
-    #define E1_RSENSE    0.11
-    #define E1_CHAIN_POS   -1
+    #define E1_CURRENT      800
+    #define E1_MICROSTEPS    16
+    #define E1_RSENSE         0.11
+    #define E1_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E2)
-    #define E2_CURRENT    800
-    #define E2_MICROSTEPS  16
-    #define E2_RSENSE    0.11
-    #define E2_CHAIN_POS   -1
+    #define E2_CURRENT      800
+    #define E2_MICROSTEPS    16
+    #define E2_RSENSE         0.11
+    #define E2_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E3)
-    #define E3_CURRENT    800
-    #define E3_MICROSTEPS  16
-    #define E3_RSENSE    0.11
-    #define E3_CHAIN_POS   -1
+    #define E3_CURRENT      800
+    #define E3_MICROSTEPS    16
+    #define E3_RSENSE         0.11
+    #define E3_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E4)
-    #define E4_CURRENT    800
-    #define E4_MICROSTEPS  16
-    #define E4_RSENSE    0.11
-    #define E4_CHAIN_POS   -1
+    #define E4_CURRENT      800
+    #define E4_MICROSTEPS    16
+    #define E4_RSENSE         0.11
+    #define E4_CHAIN_POS     -1
   #endif
 
   #if AXIS_IS_TMC(E5)
-    #define E5_CURRENT    800
-    #define E5_MICROSTEPS  16
-    #define E5_RSENSE    0.11
-    #define E5_CHAIN_POS   -1
+    #define E5_CURRENT      800
+    #define E5_MICROSTEPS    16
+    #define E5_RSENSE         0.11
+    #define E5_CHAIN_POS     -1
   #endif
 
   /**
@@ -2038,7 +2143,7 @@
    */
   #define STEALTHCHOP_XY
   #define STEALTHCHOP_Z
-  #define STEALTHCHOP_E
+  //#define STEALTHCHOP_E
 
   /**
    * Optimize spreadCycle chopper parameters by using predefined parameter sets
@@ -2067,7 +2172,9 @@
    * M912 - Clear stepper driver overtemperature pre-warn condition flag.
    * M122 - Report driver parameters (Requires TMC_DEBUG)
    */
-  //#define MONITOR_DRIVER_STATUS
+  #if ENABLED(SKR_UART)
+    #define MONITOR_DRIVER_STATUS
+  #endif
 
   #if ENABLED(MONITOR_DRIVER_STATUS)
     #define CURRENT_STEP_DOWN     50  // [mA]
@@ -2084,14 +2191,14 @@
    */
   #define HYBRID_THRESHOLD
 
-  #define X_HYBRID_THRESHOLD     100  // [mm/s]
+  #define X_HYBRID_THRESHOLD     150  // [mm/s]
   #define X2_HYBRID_THRESHOLD    100
-  #define Y_HYBRID_THRESHOLD     100
+  #define Y_HYBRID_THRESHOLD     150
   #define Y2_HYBRID_THRESHOLD    100
-  #define Z_HYBRID_THRESHOLD       3
-  #define Z2_HYBRID_THRESHOLD      3
+  #define Z_HYBRID_THRESHOLD      10
+  #define Z2_HYBRID_THRESHOLD     10
   #define Z3_HYBRID_THRESHOLD      3
-  #define E0_HYBRID_THRESHOLD     30
+  #define E0_HYBRID_THRESHOLD     50
   #define E1_HYBRID_THRESHOLD     30
   #define E2_HYBRID_THRESHOLD     30
   #define E3_HYBRID_THRESHOLD     30
@@ -2120,6 +2227,8 @@
    *
    * IMPROVE_HOMING_RELIABILITY tunes acceleration and jerk when
    * homing and adds a guard period for endstop triggering.
+   *
+   * TMC2209 requires STEALTHCHOP enabled for SENSORLESS_HOMING
    */
   //#define SENSORLESS_HOMING // StallGuard capable drivers only
 
@@ -2138,6 +2247,7 @@
     #define Y_STALL_SENSITIVITY  8
     //#define Z_STALL_SENSITIVITY  8
     //#define SPI_ENDSTOPS              // TMC2130 only
+    //#define HOME_USING_SPREADCYCLE
     //#define IMPROVE_HOMING_RELIABILITY
   #endif
 
@@ -2145,13 +2255,15 @@
    * Beta feature!
    * Create a 50/50 square wave step pulse optimal for stepper drivers.
    */
-  //#define SQUARE_WAVE_STEPPING
+  #define SQUARE_WAVE_STEPPING
 
   /**
    * Enable M122 debugging command for TMC stepper drivers.
    * M122 S0/1 will enable continous reporting.
    */
-  //#define TMC_DEBUG
+    #if ENABLED(SKR_UART)
+      #define TMC_DEBUG
+    #endif
 
   /**
    * You can set your own advanced settings by filling in predefined functions.
@@ -2160,8 +2272,8 @@
    *
    * Example:
    * #define TMC_ADV() { \
-   *   stepperX.diag0_temp_prewarn(1); \
-   *   stepperY.interpolate(0); \
+   *   stepperX.diag0_otpw(1); \
+   *   stepperY.intpol(0); \
    * }
    */
   #define TMC_ADV() {  }
@@ -2631,9 +2743,18 @@
  */
 #define HOST_ACTION_COMMANDS
 #if ENABLED(HOST_ACTION_COMMANDS)
-  #if DISABLED(MachineCR10Orig)
+  #if DISABLED(MachineCR10Orig) || ENABLED(MelziHostOnly)
     #define HOST_PROMPT_SUPPORT
   #endif
+#endif
+
+/**
+ * Cancel Objects
+ *
+ * Implement M486 to allow Marlin to skip objects
+ */
+#if NONE(MachineCR10Orig, LowMemoryBoard)
+  #define CANCEL_OBJECTS
 #endif
 
 /**

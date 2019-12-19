@@ -1,11 +1,16 @@
 ﻿## Creality CR10S Pro, CR-X, CR10 Max and Ender 5 Plus Touch Screen supported firmware
 
-This branch is intended specifically for the Creality touchscreen machines and was split off from the standard Creality branches due to specific custom changes not found upstream. This includes extensions to the EXTui framework among other smaller tweaks that we have been working towards getting submitted upstream. Primary machines supported here are :
+This branch adds support for the Creality touchscreen machines and was split off from the standard Creality branches due to specific custom changes not found upstream. This includes extensions to the EXTui framework among other smaller tweaks that we have been working towards getting submitted upstream. Machines supported here are :
 
-- CR10S Pro
-- CR10 Max
-- CR-X
-- Ender 5 Plus (Preliminary, untested)
+- [CR10S Pro](http://bit.ly/2rxZ6lP)
+- [CR10 Max](http://bit.ly/2L6wZRy)
+- [CR-X](http://bit.ly/2L6xsmM)
+- [Ender 5 Plus](https://amzn.to/37TE8yH)
+- [CR10 V2 ](http://bit.ly/37PaXfV)
+- [CR20 and Pro](http://bit.ly/2Oxxruk)
+- [CR10S](http://bit.ly/33AAaHv)
+- [CR10S4 400mm](http://bit.ly/2XXCBmq)
+- [CR10S5 500mm](http://bit.ly/35K4ZuR)
 
 The CRX Has screen files with or without ABL. All other machines should use the ProMaxEnd5_1.70_ScreenFiles file. Rev1 is the current screen file version.
 

@@ -46,7 +46,7 @@ namespace ExtUI
 
 void onStartup()
 {
-	Serial2.begin(115200);
+	DWIN_SERIAL.begin(115200);
 
 	rtscheck.recdat.head[0] = rtscheck.snddat.head[0] = FHONE;
 	rtscheck.recdat.head[1] = rtscheck.snddat.head[1] = FHTWO;
@@ -81,7 +81,11 @@ void onStartup()
 		rtscheck.RTS_SndData(0, MacVersion + j);
 	char sizebuf[20] = {0};
 	sprintf(sizebuf, "%d X %d X %d", Y_BED_SIZE, X_BED_SIZE, Z_MAX_POS);
-	rtscheck.RTS_SndData(CUSTOM_MACHINE_NAME, MacVersion);
+  #if defined(CUSTOM_MACHINE_NAME)
+	  rtscheck.RTS_SndData(CUSTOM_MACHINE_NAME, MacVersion);
+  #else
+    rtscheck.RTS_SndData(MACHINE_NAME, MacVersion);
+  #endif
 	rtscheck.RTS_SndData(DETAILED_BUILD_VERSION, SoftVersion);
 	rtscheck.RTS_SndData(sizebuf, PrinterSize);
 	rtscheck.RTS_SndData(WEBSITE_URL, CorpWebsite);
@@ -221,10 +225,12 @@ void onIdle()
 				}
 				rtscheck.RTS_SndData(VolumeSet, VolumeIcon - 2);
 				rtscheck.RTS_SndData(VolumeSet << 8, SoundAddr + 1);
-        if (getLevelingActive())
-			    rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
-		    else
-			    rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
+        #if HAS_MESH
+          if (getLevelingActive())
+            rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
+          else
+            rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
+        #endif
 			}
 			if (startprogress <= 100)
 				rtscheck.RTS_SndData(startprogress, StartIcon);
@@ -269,7 +275,7 @@ void onIdle()
 			return;
     }
 
-			if (isPrinting()) //need to optimize
+			if (isPrinting())
 			{
         rtscheck.RTS_SndData(0 + CEIconGrap, IconPrintstatus);
 				rtscheck.RTS_SndData(getProgress_seconds_elapsed() / 3600, Timehour);
@@ -313,6 +319,7 @@ void onIdle()
 			rtscheck.RTS_SndData(getActualTemp_celsius(BED), Bedtemp);
       rtscheck.RTS_SndData(getTargetTemp_celsius(H0), NozzlePreheat);
 			rtscheck.RTS_SndData(getTargetTemp_celsius(BED), BedPreheat);
+			rtscheck.RTS_SndData(getFlowPercentage(E0), Flowrate);
 
 			if (NozzleTempStatus[0] || NozzleTempStatus[2]) //statuse of loadfilement and unloadfinement when temperature is less than
 			{
@@ -373,9 +380,9 @@ RTSSHOW::RTSSHOW()
 
 int RTSSHOW::RTS_RecData()
 {
-	while (Serial2.available() > 0 && (recnum < SizeofDatabuf))
+	while (DWIN_SERIAL.available() > 0 && (recnum < SizeofDatabuf))
 	{
-		databuf[recnum] = Serial2.read();
+		databuf[recnum] = DWIN_SERIAL.read();
 		if (databuf[0] != FHONE) //ignore the invalid data
 		{
 			if (recnum > 0) // prevent the program from running.
@@ -474,7 +481,7 @@ void RTSSHOW::RTS_SndData(void)
 		}
 		for (int i = 0; i < (snddat.len + 3); i++)
 		{
-			Serial2.write(databuf[i]);
+			DWIN_SERIAL.write(databuf[i]);
 			delay_us(1);
 		}
 
@@ -510,7 +517,7 @@ void RTSSHOW::RTS_SndData(const char *str, unsigned long addr, unsigned char cmd
 
 		for (int i = 0; i < (len + 6); i++)
 		{
-			Serial2.write(databuf[i]);
+			DWIN_SERIAL.write(databuf[i]);
 			delay_us(1);
 		}
 		memset(databuf, 0, sizeof(databuf));
@@ -688,10 +695,11 @@ void RTSSHOW::RTS_HandleData()
 	{
 		if (recdat.addr == Addrbuf[i])
 		{
-			if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
-				Checkkey = PrintChoice;
-			else if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat)
+
+      if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat || Addrbuf[i] == Flowrate)
 				Checkkey = ManualSetTemp;
+			else if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
+				Checkkey = PrintChoice;
 			else if (Addrbuf[i] >= AutoZero && Addrbuf[i] <= DisplayZaxis)
 				Checkkey = XYZEaxis;
 			else if (Addrbuf[i] >= FilementUnit1 && Addrbuf[i] <= FilementUnit2)
@@ -702,6 +710,8 @@ void RTSSHOW::RTS_HandleData()
 		}
 	}
 
+  if (recdat.addr == Flowrate)
+    Checkkey = ManualSetTemp;
 	if (recdat.addr >= SDFILE_ADDR && recdat.addr <= (SDFILE_ADDR + 10 * (FileNum + 1)))
 		Checkkey = Filename;
 
@@ -727,7 +737,6 @@ void RTSSHOW::RTS_HandleData()
       const unsigned short autoMeasure = 96;
       const unsigned short assistEntry = 95;
       const unsigned short levelOn = 94;
-
     #else
       const uint8_t topLeftData = 7;
       const uint8_t topRightData = 8;
@@ -741,6 +750,9 @@ void RTSSHOW::RTS_HandleData()
       const uint8_t assistEntry = 4;
       const uint8_t levelOn = 11;
     #endif
+
+    const uint8_t validateMesh = 12;
+
 SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
 	switch (Checkkey)
@@ -845,10 +857,20 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
     case PrintChoice:
       if (recdat.addr == Stopprint)
       {
-        RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
-        RTS_SndData(0, Timehour);
-        RTS_SndData(0, Timemin);
-        stopPrint();
+        SERIAL_ECHOLN("StopPrint");
+        if (recdat.data[0] == 240) // no
+        {
+          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
+          SERIAL_ECHOLNPAIR("Stop No", recdat.data[0] );
+        }
+        else
+        {
+          RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+          RTS_SndData(0, Timehour);
+          RTS_SndData(0, Timemin);
+          SERIAL_ECHOLNPAIR("Stop Triggered", recdat.data[0] );
+          stopPrint();
+        }
       }
       else if (recdat.addr == Pauseprint)
       {
@@ -1006,6 +1028,10 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       {
         setTargetTemp_celsius((float)recdat.data[0], BED);
       }
+      else if (recdat.addr == Flowrate)
+      {
+        setFlow_percent((int16_t)recdat.data[0], getActiveTool());
+      }
       break;
 
     case Setting:
@@ -1016,11 +1042,12 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.data[0] == 1) //Bed Autoleveling
       {
-        if (getLevelingActive())
-          RTS_SndData(3, AutoLevelIcon);
-        else
-          RTS_SndData(2, AutoLevelIcon);
-
+        #if HAS_MESH
+          if (getLevelingActive())
+            RTS_SndData(3, AutoLevelIcon);
+          else
+            RTS_SndData(2, AutoLevelIcon);
+        #endif
         RTS_SndData(10, FilenameIcon); //Motor Icon
         if (!isPositionKnown())
           injectCommands_P(PSTR("G28\nG1F1000Z0.0"));
@@ -1124,7 +1151,9 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         case assistEntry: // Assitant Level
         {
-          setLevelingActive(false);
+          #if HAS_MESH
+            setLevelingActive(false);
+          #endif
           if (!isPositionKnown())
             injectCommands_P((PSTR("G28\nG1 F1000 Z0.0")));
           else
@@ -1137,41 +1166,10 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           waitway = 3; //only for prohibiting to receive massage
           RTS_SndData(3, AutolevelIcon);
-          bool zig = true;
-          for (uint8_t yCount = 0, showcount = 0; yCount < GRID_MAX_POINTS_Y; yCount++)
-          {
-            int8_t inStart, inStop, inInc;
-            if (zig)
-            { // away from origin
-              inStart = 0;
-              inStop = GRID_MAX_POINTS_X;
-              inInc = 1;
-            }
-            else
-            { // towards origin
-              inStart = GRID_MAX_POINTS_X - 1;
-              inStop = -1;
-              inInc = -1;
-            }
-
-            zig ^= true; // zag
-            for (int8_t xCount = inStart; xCount != inStop; xCount += inInc)
-            {
-              if ((showcount+1) < (GRID_MAX_POINTS_X * GRID_MAX_POINTS_X))
-              {
-                if (
-                #if ENABLED(ABL_UBL)
-                  xCount != (GRID_MAX_POINTS_X - 1) && yCount != (GRID_MAX_POINTS_Y - 1)
-                #else
-                  true
-                #endif
-                ){
-                  showcount++;
-                  xy_uint8_t point = {xCount, yCount};
-                  rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (showcount - 1) * 2);
-                }
-              }
-            }
+          uint8_t abl_probe_index = 0;
+          while (abl_probe_index < 25) {
+            rtscheck.RTS_SndData(0, AutolevelVal + abl_probe_index * 2);
+            ++abl_probe_index;
           }
           RTS_SndData(ExchangePageBase + 85, ExchangepageAddr);
           injectCommands_P(PSTR(USER_GCODE_1));
@@ -1220,22 +1218,30 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         case levelOn: // Autolevel switch
         {
-          if (!getLevelingActive()) //turn on the Autolevel
-          {
-            RTS_SndData(3, AutoLevelIcon);
-            setLevelingActive(true);
-          }
-          else //turn off the Autolevel
-          {
-            RTS_SndData(2, AutoLevelIcon);
-            setLevelingActive(false);
-          }
+          #if HAS_MESH
+            if (!getLevelingActive()) //turn on the Autolevel
+            {
+              RTS_SndData(3, AutoLevelIcon);
+              setLevelingActive(true);
+            }
+            else //turn off the Autolevel
+            {
+              RTS_SndData(2, AutoLevelIcon);
+              setLevelingActive(false);
+            }
+          #endif
           RTS_SndData(getZOffset_mm() * 100, 0x1026);
+          break;
+        }
+        case validateMesh:
+        {
+          injectCommands_P(PSTR("G26R255"));
+          onStatusChanged("Beginning G26.. Heating");
           break;
         }
         default:
         {
-          SERIAL_ECHOLN(PSTR("Unsupported Option Selected"));
+          SERIAL_ECHOPAIR("Unsupported Option Selected", recdat.data[0]);
         }
       }
 
@@ -1409,7 +1415,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           break;
         case 4:
           //BLTouch Reset
-          injectCommands_P(PSTR("M999"));
+          injectCommands_P(PSTR("M999\nM280P0S160"));
           break;
         case 5:
           //PID Bed
@@ -1426,7 +1432,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       if (recdat.data[0] == 1) //Filament is out, resume / resume selected on screen
       {
         if(
-        #if DISABLED(FILAMENT_RUNOUT_SENSOR)
+        #if DISABLED(FILAMENT_RUNOUT_SENSOR) || ENABLED(FILAMENT_MOTION_SENSOR)
           true
         #elif NUM_RUNOUT_SENSORS > 1
           (getActiveTool() == E0 && READ(FIL_RUNOUT_PIN) != FIL_RUNOUT_INVERTING) || (getActiveTool() == E1 && READ(FIL_RUNOUT2_PIN) != FIL_RUNOUT_INVERTING)
@@ -1652,7 +1658,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 	recdat.head[1] = FHTWO;
 }
 
-void onPrinterKilled(PGM_P msg) {
+void onPrinterKilled(PGM_P msg, PGM_P component) {
   SERIAL_ECHOLN("***kill***");
   //First we send screen available on old versions of software
 	rtscheck.RTS_SndData(ExchangePageBase + 15, ExchangepageAddr);
@@ -1789,55 +1795,34 @@ void onUserConfirmRequired(const char *const msg)
 void onStatusChanged(const char *const msg)
 {
   for (int j = 0; j < 40; j++) // Clear old message
-    rtscheck.RTS_SndData(' ', 0x20E8+j);
-  rtscheck.RTS_SndData(msg, 0x20E8);
+    rtscheck.RTS_SndData(' ', StatusMessageString+j);
+  rtscheck.RTS_SndData(msg, StatusMessageString);
 }
 void onFactoryReset()
 {
 	SERIAL_ECHOLN("==onFactoryReset==");
 }
-void onMeshUpdate(const uint8_t xpos, const uint8_t ypos, const float zval)
+void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
 {
   if(waitway==3)
     if(isPositionKnown() && (getActualTemp_celsius(BED) >= (getTargetTemp_celsius(BED)-1)))
 			  rtscheck.RTS_SndData(ExchangePageBase + 64, ExchangepageAddr);
-
-	bool zig = true;
-	for (uint8_t yCount = 0, showcount = 0; yCount < GRID_MAX_POINTS_Y; yCount++)
-	{
-		int8_t inStart, inStop, inInc;
-		if (zig)
-		{ // away from origin
-			inStart = 0;
-			inStop = GRID_MAX_POINTS_X;
-			inInc = 1;
-		}
-		else
-		{ // towards origin
-			inStart = GRID_MAX_POINTS_X - 1;
-			inStop = -1;
-			inInc = -1;
-		}
-
-		zig ^= true; // zag
-		for (int8_t xCount = inStart; xCount != inStop; xCount += inInc)
-		{
-			if ((showcount+1) < (GRID_MAX_POINTS_X * GRID_MAX_POINTS_X))
-			{
-        if (
-        #if ENABLED(ABL_UBL)
-          xCount != (GRID_MAX_POINTS_X - 1) && yCount != (GRID_MAX_POINTS_Y - 1)
-        #else
-          true
-        #endif
-        ){
-          showcount++;
-          xy_uint8_t point = {xCount, yCount};
-				  rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (showcount - 1) * 2);
+  #if HAS_MESH
+    uint8_t abl_probe_index = 0;
+        for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
+        {
+          for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
+          {
+            uint8_t x_Point = inner;
+            bool zig = (outer & 1); // != ((PR_OUTER_END) & 1);
+            if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+            xy_uint8_t point = {x_Point, outer};
+            if(x_Point==xpos && outer ==ypos)
+              rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
+            ++abl_probe_index;
+          }
         }
-			}
-		}
-	}
+  #endif
 };
 
 void onStoreSettings(char *buff)
@@ -1877,43 +1862,20 @@ void onConfigurationStoreRead(bool success)
   #if HAS_MESH && (ANY(MachineCR10SPro, MachineEnder5Plus, MachineCR10Max) || ENABLED(Force10SProDisplay))
     if (ExtUI::getMeshValid())
     {
-      bool zig = true;
-      for (uint8_t yCount = 0, showcount = 0; yCount < GRID_MAX_POINTS_Y; yCount++)
-      {
-        int8_t inStart, inStop, inInc;
-
-        if (zig)
-        { // away from origin
-          inStart = 0;
-          inStop = GRID_MAX_POINTS_X;
-          inInc = 1;
-        }
-        else
-        { // towards origin
-          inStart = GRID_MAX_POINTS_X - 1;
-          inStop = -1;
-          inInc = -1;
-        }
-
-        zig ^= true; // zag
-        for (int8_t xCount = inStart; xCount != inStop; xCount += inInc)
+      uint8_t abl_probe_index = 0;
+        for(uint8_t outer = 0; outer < GRID_MAX_POINTS_Y; outer++)
         {
-          if ((showcount+1) < (GRID_MAX_POINTS_X * GRID_MAX_POINTS_X))
+          for (uint8_t inner = 0; inner < GRID_MAX_POINTS_X; inner++)
           {
-            if (
-            #if ENABLED(ABL_UBL)
-              xCount != (GRID_MAX_POINTS_X - 1) && yCount != (GRID_MAX_POINTS_Y - 1)
-            #else
-              true
-            #endif
-            ){
-              showcount++;
-              xy_uint8_t point = {xCount, yCount};
-              rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (showcount - 1) * 2);
-            }
+            uint8_t x_Point = inner;
+            bool zig = (outer & 1);
+            if (zig) x_Point = (GRID_MAX_POINTS_X - 1) - inner;
+            xy_uint8_t point = {x_Point, outer};
+            rtscheck.RTS_SndData(ExtUI::getMeshPoint(point) * 1000, AutolevelVal + (abl_probe_index * 2));
+            ++abl_probe_index;
           }
         }
-      }
+
       rtscheck.RTS_SndData(3, AutoLevelIcon); //2=On, 3=Off
       setLevelingActive(true);
     }

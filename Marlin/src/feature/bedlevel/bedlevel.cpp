@@ -100,10 +100,6 @@ void set_bed_leveling_enabled(const bool enable/*=true*/) {
   }
 }
 
-TemporaryBedLevelingState::TemporaryBedLevelingState(const bool enable) : saved(planner.leveling_active) {
-  set_bed_leveling_enabled(enable);
-}
-
 #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
 
   void set_z_fade_height(const float zfh, const bool do_report/*=true*/) {
@@ -228,14 +224,14 @@ void reset_bed_level() {
     #ifdef MANUAL_PROBE_START_Z
       constexpr float startz = _MAX(0, MANUAL_PROBE_START_Z);
       #if MANUAL_PROBE_HEIGHT > 0
-        do_blocking_move_to(pos.x, pos.y, MANUAL_PROBE_HEIGHT);
+        do_blocking_move_to_xy_z(pos, MANUAL_PROBE_HEIGHT);
         do_blocking_move_to_z(startz);
       #else
-        do_blocking_move_to(pos.x, pos.y, startz);
+        do_blocking_move_to_xy_z(pos, startz);
       #endif
     #elif MANUAL_PROBE_HEIGHT > 0
       const float prev_z = current_position.z;
-      do_blocking_move_to(pos.x, pos.y, MANUAL_PROBE_HEIGHT);
+      do_blocking_move_to_xy_z(pos, MANUAL_PROBE_HEIGHT);
       do_blocking_move_to_z(prev_z);
     #else
       do_blocking_move_to_xy(pos);
