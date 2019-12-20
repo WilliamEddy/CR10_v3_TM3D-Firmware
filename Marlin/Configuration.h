@@ -1756,11 +1756,6 @@
     #define Y_BED_SIZE 150
     #define Z_MAX_POS 200
     #define ClipClearance 15
-    #elif(ENABLED(MachineEnder3))
-    #define X_BED_SIZE 230
-    #define Y_BED_SIZE 230
-    #define Z_MAX_POS 250
-    #define ClipClearance 15
   #elif(ANY(MachineEnder4, MachineEnder5))
     #define X_BED_SIZE 220
     #define Y_BED_SIZE 220
@@ -1771,7 +1766,7 @@
     #define Y_BED_SIZE 360
     #define Z_MAX_POS 400
     #define ClipClearance 25
-  #elif(ENABLED(MachineCR20))
+  #elif(ANY(MachineCR20, MachineEnder3)) ))
     #define X_BED_SIZE 240
     #define Y_BED_SIZE 240
     #define Z_MAX_POS 250
