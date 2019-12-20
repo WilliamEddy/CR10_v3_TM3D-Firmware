@@ -77,7 +77,7 @@
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
 //#define ABL_NCSW //Creality ABL or Any NC Sensor
-//#define ABL_BLTOUCH
+#define ABL_BLTOUCH
 
 //#define CREALITY_ABL_MOUNT //Using creality ABL mount
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
@@ -94,7 +94,7 @@
 
 // Touchscreen options - only 32 bit boards have the open serial ports to use with graphics displays above
 //#define ForceCRXDisplay
-#define Force10SProDisplay
+//#define Force10SProDisplay
 
 //#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
@@ -386,6 +386,9 @@
  #define DirectDrive
 #endif
 
+#if ENABLED(MachineCR10Orig, ABL_BI)
+  #define LowMemoryBoard
+#endif
 //Show the Marlin bootscreen on startup. ** ENABLE FOR PRODUCTION **
 
 #if NONE(MachineCR10Orig, MachineEnder4, MachineCR10SPro, MachineCRX, MachineCR10Max, MachineEnder5Plus) || ENABLED(GraphicLCD)
@@ -2492,8 +2495,8 @@
  * just remove some extraneous menu items to recover space.
  */
 #if ENABLED(MachineCR10Orig)
-  #define NO_LCD_MENUS
-  //#define SLIM_LCD_MENUS
+  //#define NO_LCD_MENUS
+  #define SLIM_LCD_MENUS
 #endif
 
 //
