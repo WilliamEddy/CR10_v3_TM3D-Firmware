@@ -1504,11 +1504,11 @@
  #endif
 
 // Certain types of probes need to stay away from edges
-#if ENABLED(ABL_BLTOUCH)
-  #define MIN_PROBE_EDGE 3
-#else
+//#if ENABLED(ABL_BLTOUCH)
+//  #define MIN_PROBE_EDGE 3
+//#else
   #define MIN_PROBE_EDGE 10
-#endif
+//#endif
 
 // X and Y axis travel speed (mm/m) between probes
 #define XY_PROBE_SPEED 6000
@@ -1756,6 +1756,11 @@
     #define Y_BED_SIZE 150
     #define Z_MAX_POS 200
     #define ClipClearance 15
+  #elif ENABLED(MachineEnder3)
+    #define X_BED_SIZE 260
+    #define Y_BED_SIZE 260
+    #define Z_MAX_POS 250
+    #define ClipClearance 15
   #elif(ANY(MachineEnder4, MachineEnder5))
     #define X_BED_SIZE 220
     #define Y_BED_SIZE 220
@@ -1766,7 +1771,7 @@
     #define Y_BED_SIZE 360
     #define Z_MAX_POS 400
     #define ClipClearance 25
-  #elif(ANY(MachineCR20, MachineEnder3)) ))
+  #elif ENABLED(MachineCR20)
     #define X_BED_SIZE 240
     #define Y_BED_SIZE 240
     #define Z_MAX_POS 250
