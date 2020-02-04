@@ -1434,11 +1434,11 @@
     #endif
   #endif
 
-  #if ENABLED(EXTENSIBLE_UI) && NONE(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH)
+  #if ENABLED(EXTENSIBLE_UI) && NONE(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH, ABL_TOUCH_MI)
     #define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
   #endif
 
-  #if ANY(ABL_EZABL, ABL_BLTOUCH, ABL_NCSW)
+  #if ANY(ABL_EZABL, ABL_BLTOUCH, ABL_NCSW, ABL_TOUCH_MI)
     #define BABYSTEP_ZPROBE_OFFSET          // Combine M851 Z and Babystepping
   #endif
   #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
