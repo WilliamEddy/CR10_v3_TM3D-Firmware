@@ -77,8 +77,8 @@
 */
 //#define ABL_EZABL // TH3D EZABL or Any NO Sensor
 //#define ABL_NCSW //Creality ABL or Any NC Sensor
-//#define ABL_BLTOUCH
-#define ABL_TOUCH_MI // Uncomment ABL_TOUCH_MI to use Touch-MI sensor by hotends.fr
+#define ABL_BLTOUCH
+//#define ABL_TOUCH_MI // Uncomment ABL_TOUCH_MI to use Touch-MI sensor by hotends.fr
 
 //#define CREALITY_ABL_MOUNT //Using creality ABL mount
 //#define E3D_DUALFAN_MOUNT // Using HD Modular mount as above with 2 5015 blowers and sensor on the right
@@ -282,7 +282,6 @@
   #endif
   #if ENABLED(ABL_TOUCH_MI)
     #define TOUCH_MI_PROBE
-    #define Z_MIN_PIN 12
   #endif
   #if DISABLED(ABL_UBL)
     #define ABL_BI
@@ -1680,8 +1679,8 @@
 //#define UNKNOWN_Z_NO_RAISE // Don't raise Z (lower the bed) if Z is "unknown." For beds that fall when Z is powered off.
 #if ANY(MachineEnder5, MachineEnder5Plus)
   #define Z_HOMING_HEIGHT 0
-#else 
-  #if ENABLED(TOUCH_MI_PROBE)  
+#else
+  #if ENABLED(TOUCH_MI_PROBE)
     #define Z_HOMING_HEIGHT 10
   #else
     #define Z_HOMING_HEIGHT 4  // (in mm) Minimal z height before homing (G28) for Z clearance above the bed, clamps, ...
@@ -1963,14 +1962,14 @@
  */
 //#define AUTO_BED_LEVELING_3POINT
 //#define AUTO_BED_LEVELING_LINEAR
-#if (ENABLED(ABL_EZABL)|| ENABLED(ABL_BLTOUCH) || ENABLED(ABL_NCSW)) || ENABLED(ABL_TOUCH_MI)
-  #if ((ENABLED(ABL_UBL)))
+#if ANY(ABL_EZABL, ABL_BLTOUCH, ABL_NCSW, ABL_TOUCH_MI)
+  #if ENABLED(ABL_UBL)
     #define AUTO_BED_LEVELING_UBL
     #endif
-    #if ((ENABLED(ABL_BI)))
+    #if (ENABLED(ABL_BI)
       #define AUTO_BED_LEVELING_BILINEAR
     #endif
-#elif NONE(OrigLA)
+#elif DISABLED(OrigLA, MachineCR10Orig)
   #define MESH_BED_LEVELING
 #else
   #define ClipClearance 0
