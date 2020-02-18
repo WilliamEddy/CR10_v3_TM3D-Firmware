@@ -1966,7 +1966,7 @@
   #if ENABLED(ABL_UBL)
     #define AUTO_BED_LEVELING_UBL
     #endif
-    #if (ENABLED(ABL_BI)
+    #if ENABLED(ABL_BI)
       #define AUTO_BED_LEVELING_BILINEAR
     #endif
 #elif DISABLED(OrigLA, MachineCR10Orig)
