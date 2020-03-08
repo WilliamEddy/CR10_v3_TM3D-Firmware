@@ -48,7 +48,7 @@
 //#define HotendMosquito
 
 //Enable this if you have an all metal hotend capable of 300c
-//#define HotendAllMetal
+#define HotendAllMetal
 
 // Enable this if you used a plug and play creality e3d or mosquito kit and kept the Creality thermistor
 //#define CrealityThermistor
