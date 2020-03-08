@@ -34,6 +34,8 @@ Now that we have configured an auto build, we are able to provide quite a few HE
 - Base bumped to Marlin 2.0.4.4
 - Tweaks to limit RAM consumption where possible
 
+The default build button is now a batch Build All! If you want to build a custom stock 2560 environment, use the env:megaatmega2560 environment. For SKR boards use the LPC1768/9 environments as usual.
+
 ## About Our Branches
 
 The firmware branches maintained here are made possible by the support of sponsors like [Tiny Machines 3D](https://www.tinymachines3d.com/?rfsn=3419592.cc302fe) as well as our customer base through our 3D printing Services. Maintaining and developing these branches takes a significant investment, made up of time and machines. To support continued development, please consider your next 3D Printer related purchase from Tiny Machines 3D and thank them for supporting open source development. Or, consider us for printing services outside of your machine’s capabilities. Print service requests can be sent to d.menzel@insanityautomation.com and we will respond typically within 1 working day. If you do not need anything printed or a 3D Printer but still want to contribute, you can support us through [Patreon](https://www.patreon.com/InsanityAutomation).
