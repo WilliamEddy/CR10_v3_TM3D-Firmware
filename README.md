@@ -12,9 +12,27 @@ This branch adds support for the Creality touchscreen machines and was split off
 - [CR10S4 400mm](http://bit.ly/2XXCBmq)
 - [CR10S5 500mm](http://bit.ly/35K4ZuR)
 
-The CRX Has screen files with or without ABL. All other machines should use the ProMaxEnd5_1.70_ScreenFiles file. Rev1 is the current screen file version.
+The CRX Has screen files with or without ABL. All other machines should use the same generic set. V2 is the current screen file version.
 
 Screen files are archived with [7-Zip](https://www.7-zip.org/) simply because it came out 1/5 the file size of a zip file. That added up fast!
+
+Now that we have configured an auto build, we are able to provide quite a few HEX file configurations. There is an issue with Windows systems limiting path depth however so the file names need to be shorter than we would prefer. Therefore, here is a legend to decoding what they are :
+
+- BLT = BLTouch
+- BIL = Bilinear Leveling
+- UBL - Unified Bed Leveling
+- DZ = Dual Z Steppers
+- Fil = FilamentRunout
+- Slnt = Creality Silent Board
+- H = E3D Hemera Extruder
+- Melzi Host option disables local SD card to allow more features and buffer for Octoprint control
+
+## Primary notes for DW6
+- Power Loss Recovery is functional again
+- Added screen for manual PID entry and custom tuning
+- Added screen for Step/mm and probe offset editing
+- Base bumped to Marlin 2.0.4.4
+- Tweaks to limit RAM consumption where possible
 
 ## About Our Branches
 
@@ -27,8 +45,6 @@ All configuration options intended to be adjusted by end users have been placed 
 ## Known Issues
  - While auto leveling (measuring) is in progress pressing other buttons on the screen can abort portions of the script depending where it is
  - - The process includes heating the bed before probing, probing then heating the nozzle before moving to Z0.
-
- - Manual move screen has a planner issue with Bilinear when segmented moves is enabled. This is caused by a bug in the main Marlin branch. UBL is recommended in most cases anyway. If you choose to enable Bilinear, segmented moves has been set to a value over the possible manual moves by default to avoid the bug.
 
  - UBL functions differently than Bilinear. It currently probes 16 points and extrapolates where the probe cannot reach. This is because UBL is designed to build a mesh everywhere the nozzle can reach, where bilinear only works where the probe can reach. These points are intended to be manually tuned however the touchscreen has no interface to do so. We are working on a way to increase the mesh density and feed alternative points to the screen. This is especially important for the CR-10 Max. Please mind the differences with UBL during use.
 
@@ -49,12 +65,7 @@ Marlin Discord - https://discord.gg/n5NJ59y
 For this branch, we still have some active goals open that we plan to continue working on provided there is continued interest in the project.
 - SD Card sub directory traversal
 - Volume and leveling state EEPROM storage
-- LCD pause messages and responses taken from machine instead of static messages
-- Additional Maintenance and tools screens (PID Tuning, Init EEPROM ect)
-- Tuning of status message clearing
 - Utilize a few more of the background screens (such as print finished) that are currently not in use but not necessary
-
-If there is any interest in re-implementing the Chinese language screens, that's definitely possible at this point. In order to put the effort in however I would need to see a notable amount of interest in this.
 
 
 ## Firmware Branches

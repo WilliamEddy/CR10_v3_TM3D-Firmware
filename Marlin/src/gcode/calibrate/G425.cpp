@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -20,7 +20,7 @@
  *
  */
 
-#include "../../Marlin.h"
+#include "../../MarlinCore.h"
 
 #if ENABLED(CALIBRATION_GCODE)
 
@@ -128,13 +128,15 @@ inline void park_above_object(measurements_t &m, const float uncertainty) {
 #endif
 
 inline bool read_calibration_pin() {
-  #if HAS_CALIBRATION_PIN
-    return (READ(CALIBRATION_PIN) != CALIBRATION_PIN_INVERTING);
-  #elif ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)
-    return (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
-  #else
-    return (READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING);
-  #endif
+  return (
+    #if PIN_EXISTS(CALIBRATION)
+      READ(CALIBRATION_PIN) != CALIBRATION_PIN_INVERTING
+    #elif HAS_CUSTOM_PROBE_PIN
+      READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING
+    #else
+      READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING
+    #endif
+  );
 }
 
 /**
@@ -574,11 +576,7 @@ inline void calibrate_all() {
  */
 void GcodeSuite::G425() {
   TEMPORARY_SOFT_ENDSTOP_STATE(false);
-  #if HAS_LEVELING
-    // Set current position to the physical position
-    const bool leveling_was_enabled = planner.leveling_active;
-    set_bed_leveling_enabled(false);
-  #endif
+  TEMPORARY_BED_LEVELING_STATE(false);
 
   if (axis_unhomed_error()) return;
 
@@ -607,11 +605,6 @@ void GcodeSuite::G425() {
   #endif
   else
     calibrate_all();
-
-  #if HAS_LEVELING
-    planner.synchronize();
-    set_bed_leveling_enabled(leveling_was_enabled);
-  #endif
 }
 
 #endif // CALIBRATION_GCODE

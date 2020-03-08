@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -39,14 +39,52 @@
 #define SERVO1_PIN         P2_00   // SERVO P2.0
 
 //
+// Trinamic Stallguard pins
+//
+#define X_DIAG_PIN         P1_29   // X-
+#define Y_DIAG_PIN         P1_27   // Y-
+#define Z_DIAG_PIN         P1_25   // Z-
+#define E0_DIAG_PIN        P1_28   // X+
+#define E1_DIAG_PIN        P1_26   // Y+
+
+//
 // Limit Switches
 //
-#define X_MIN_PIN          P1_29
-#define X_MAX_PIN          P1_28
-#define Y_MIN_PIN          P1_27
-#define Y_MAX_PIN          P1_26
-#define Z_MIN_PIN          P1_25
-#define Z_MAX_PIN          P1_24
+#if X_STALL_SENSITIVITY
+  #define X_STOP_PIN       X_DIAG_PIN
+  #if X_HOME_DIR < 0
+    #define X_MAX_PIN      P1_28   // X+
+  #else
+    #define X_MIN_PIN      P1_28   // X+
+  #endif
+#else
+  #define X_MIN_PIN        P1_29   // X-
+  #define X_MAX_PIN        P1_28   // X+
+#endif
+
+#if Y_STALL_SENSITIVITY
+  #define Y_STOP_PIN       Y_DIAG_PIN
+  #if Y_HOME_DIR < 0
+    #define Y_MAX_PIN      P1_26   // Y+
+  #else
+    #define Y_MIN_PIN      P1_26   // Y+
+  #endif
+#else
+  #define Y_MIN_PIN        P1_27   // Y-
+  #define Y_MAX_PIN        P1_26   // Y+
+#endif
+
+#if Z_STALL_SENSITIVITY
+  #define Z_STOP_PIN       Z_DIAG_PIN
+  #if Z_HOME_DIR < 0
+    #define Z_MAX_PIN      P1_24   // Z+
+  #else
+    #define Z_MIN_PIN      P1_24   // Z+
+  #endif
+#else
+  #define Z_MIN_PIN        P1_25   // Z-
+  #define Z_MAX_PIN        P1_24   // Z+
+#endif
 
 //
 // Z Probe (when not Z_MIN_PIN)
@@ -166,7 +204,15 @@
 //
 #define HEATER_BED_PIN     P2_05
 #define HEATER_0_PIN       P2_07
-#define HEATER_1_PIN       P2_06
+#if HOTENDS == 1
+  #ifndef FAN1_PIN
+    #define FAN1_PIN       P2_06
+  #endif
+#else
+  #ifndef HEATER_1_PIN
+    #define HEATER_1_PIN   P2_06
+  #endif
+#endif
 #ifndef FAN_PIN
   #define FAN_PIN          P2_04
 #endif

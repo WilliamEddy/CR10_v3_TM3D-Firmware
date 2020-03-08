@@ -9,12 +9,8 @@ namespace ExtUI
 {
   uint8_t waitway_lock = 0;
   const float manual_feedrate_mm_m[] = MANUAL_FEEDRATE;
-  int startprogress = 0;
+  uint8_t startprogress = 0;
   CRec CardRecbuf;
-  #if DISABLED(POWER_LOSS_RECOVERY)
-    int power_off_type_yes = 0;
-    int power_off_commands_count = 0;
-  #endif
 
   char waitway = 0;
   int recnum = 0;
@@ -37,12 +33,15 @@ namespace ExtUI
   bool FanStatus = true;
   bool AutohomeKey = false;
   unsigned char AutoHomeIconNum;
-  unsigned long VolumeSet = 0x80;
-  extern char power_off_commands[9][96];
-  bool PoweroffContinue = false;
+  unsigned long VolumeSet = 0x20;
 
   bool reEntryPrevent = false;
   uint16_t idleThrottling = 0;
+
+  #if HAS_PID_HEATING
+    uint16_t pid_hotendAutoTemp = 150;
+    uint16_t pid_bedAutoTemp = 70;
+  #endif
 
 void onStartup()
 {
@@ -54,7 +53,6 @@ void onStartup()
 
 	//VolumeSet = eeprom_read_byte((unsigned char*)FONT_EEPROM+4);
 	//if(VolumeSet < 0 || VolumeSet > 0xFF)
-	VolumeSet = 0x20;
 
   //Set Eco Mode
 	if (PrintMode)
@@ -121,7 +119,7 @@ void onIdle()
 {
   if (reEntryPrevent)
     return;
-  if(idleThrottling++ < 1000){
+  if(idleThrottling++ < 750){
     return;
   }
 
@@ -192,88 +190,49 @@ void onIdle()
       break;
 		}
 
-
-    #if ENABLED(POWER_LOSS_RECOVERY)
-      if (PoweroffContinue)
-      {
-        PoweroffContinue = false;
-        injectCommands_P(power_off_commands[3]);
-        card.startFileprint();
-        print_job_timer.power_off_start();
-      }
-    #endif
-
   void yield();
 
 	if (InforShowStatus)
 	{
-    if(power_off_type_yes ==0)
-    {
-      if (startprogress == 0)
-			{
-				rtscheck.RTS_SndData(StartSoundSet, SoundAddr);
-
-				if (VolumeSet == 0)
-				{
-					rtscheck.RTS_SndData(0, VolumeIcon);
-					rtscheck.RTS_SndData(9, SoundIcon);
-				}
-				else
-				{
-					rtscheck.RTS_SndData((VolumeSet + 1) / 32 - 1, VolumeIcon);
-					rtscheck.RTS_SndData(8, SoundIcon);
-				}
-				rtscheck.RTS_SndData(VolumeSet, VolumeIcon - 2);
-				rtscheck.RTS_SndData(VolumeSet << 8, SoundAddr + 1);
-        #if HAS_MESH
-          if (getLevelingActive())
-            rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
-          else
-            rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
-        #endif
-			}
-			if (startprogress <= 100)
-				rtscheck.RTS_SndData(startprogress, StartIcon);
-			else
-				rtscheck.RTS_SndData((startprogress - 100), StartIcon + 1);
-      if ((startprogress += 1) > 200)
-			{
-        #if ENABLED(POWER_LOSS_RECOVERY)
-          if(isMediaInserted() && (power_off_commands_count > 0)) {
-            for (uint16_t i = 0; i < CardRecbuf.Filesum; i++)
-            {
-              if (!strcmp(CardRecbuf.Cardfilename[i], &power_off_info.sd_filename[1]))
-              {
-                InforShowStatus = true;
-                int filelen = strlen(CardRecbuf.Cardshowfilename[i]);
-                filelen = (TEXTBYTELEN - filelen) / 2;
-                if (filelen > 0)
-                {
-                  char buf[20];
-                  memset(buf, 0, sizeof(buf));
-                  strncpy(buf, "         ", filelen);
-                  strcpy(&buf[filelen], CardRecbuf.Cardshowfilename[i]);
-                  RTS_SndData(buf, Printfilename);
-                }
-                else
-                  RTS_SndData(CardRecbuf.Cardshowfilename[i], Printfilename); //filenames
-                RTS_SndData(ExchangePageBase + 76, ExchangepageAddr);
-                break;
-              }
-            }
+        if (startprogress == 0)
+        {
+          rtscheck.RTS_SndData(StartSoundSet, SoundAddr);
+          if (VolumeSet == 0)
+          {
+            rtscheck.RTS_SndData(0, VolumeIcon);
+            rtscheck.RTS_SndData(9, SoundIcon);
           }
-          reEntryPrevent = false;
-          return;
-        #endif
-          SERIAL_ECHOLN("  startprogress ");
-          power_off_type_yes = 1;
-          InforShowStatus = true;
-          TPShowStatus = false;
-          rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
-			}
-      reEntryPrevent = false;
-			return;
-    }
+          else
+          {
+            rtscheck.RTS_SndData((VolumeSet + 1) / 32 - 1, VolumeIcon);
+            rtscheck.RTS_SndData(8, SoundIcon);
+          }
+          rtscheck.RTS_SndData(VolumeSet, VolumeIcon - 2);
+          rtscheck.RTS_SndData(VolumeSet << 8, SoundAddr + 1);
+          #if HAS_MESH
+            if (getLevelingActive())
+              rtscheck.RTS_SndData(3, AutoLevelIcon); /*On*/
+            else
+              rtscheck.RTS_SndData(2, AutoLevelIcon); /*Off*/
+          #endif
+          startprogress += 25;
+        }
+        else if( startprogress < 250)
+        {
+            startprogress = 254;
+            SERIAL_ECHOLN("  startprogress ");
+            InforShowStatus = true;
+            TPShowStatus = false;
+            rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
+            reEntryPrevent = false;
+			      return;
+        }
+        if (startprogress <= 100)
+          rtscheck.RTS_SndData(startprogress, StartIcon);
+        else
+          rtscheck.RTS_SndData((startprogress - 100), StartIcon + 1);
+
+        //rtscheck.RTS_SndData((startprogress++) % 5, ExchFlmntIcon);
 
 			if (isPrinting())
 			{
@@ -319,7 +278,29 @@ void onIdle()
 			rtscheck.RTS_SndData(getActualTemp_celsius(BED), Bedtemp);
       rtscheck.RTS_SndData(getTargetTemp_celsius(H0), NozzlePreheat);
 			rtscheck.RTS_SndData(getTargetTemp_celsius(BED), BedPreheat);
-			rtscheck.RTS_SndData(getFlowPercentage(E0), Flowrate);
+			rtscheck.RTS_SndData((unsigned int)(getFlowPercentage(E0)), Flowrate);
+			//SERIAL_ECHOLNPAIR("getFlowPercentage =", (unsigned int)getFlowPercentage(E0));
+      rtscheck.RTS_SndData((unsigned int)(getAxisSteps_per_mm(X) * 10), StepMM_X);
+      rtscheck.RTS_SndData((unsigned int)(getAxisSteps_per_mm(Y) * 10), StepMM_Y);
+      rtscheck.RTS_SndData((unsigned int)(getAxisSteps_per_mm(Z) * 10), StepMM_Z);
+      rtscheck.RTS_SndData((unsigned int)(getAxisSteps_per_mm(E0) * 10), StepMM_E);
+
+      #if HAS_BED_PROBE
+        rtscheck.RTS_SndData(getProbeOffset_mm(X) * 100, ProbeOffset_X);
+        rtscheck.RTS_SndData(getProbeOffset_mm(Y) * 100, ProbeOffset_Y);
+        rtscheck.RTS_SndData(getZOffset_mm() * 100, ProbeOffset_Z);
+      #endif
+
+      #if HAS_PID_HEATING
+        rtscheck.RTS_SndData(pid_hotendAutoTemp, HotendPID_AutoTmp);
+        rtscheck.RTS_SndData(pid_bedAutoTemp, BedPID_AutoTmp);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+      #endif
 
 			if (NozzleTempStatus[0] || NozzleTempStatus[2]) //statuse of loadfilement and unloadfinement when temperature is less than
 			{
@@ -339,15 +320,15 @@ void onIdle()
 				}
 				else if (getActualTemp_celsius(H0) >= getTargetTemp_celsius(H0) && NozzleTempStatus[2])
 				{
-					SERIAL_ECHOPAIR("\n ***NozzleTempStatus[2] =", (int)NozzleTempStatus[2]);
-					startprogress = NozzleTempStatus[2] = 0;
+					SERIAL_ECHOLNPAIR("***NozzleTempStatus[2] =", (int)NozzleTempStatus[2]);
+					NozzleTempStatus[2] = 0;
 					TPShowStatus = true;
 					rtscheck.RTS_SndData(4, ExchFlmntIcon);
 					rtscheck.RTS_SndData(ExchangePageBase + 83, ExchangepageAddr);
 				}
 				else if (NozzleTempStatus[2])
 				{
-					rtscheck.RTS_SndData((startprogress++) % 5, ExchFlmntIcon);
+					//rtscheck.RTS_SndData((startprogress++) % 5, ExchFlmntIcon);
 				}
 			}
 
@@ -357,17 +338,16 @@ void onIdle()
 				if (AutoHomeIconNum > 9)
 					AutoHomeIconNum = 0;
 			}
-
-    if(rtscheck.recdat.addr != DisplayZaxis && rtscheck.recdat.addr != DisplayYaxis && rtscheck.recdat.addr != DisplayZaxis) {
-			rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)X), DisplayXaxis);
-		  rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)Y), DisplayYaxis);
-		  rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)Z), DisplayZaxis);
-    }
-
 	}
   void yield();
 	if (rtscheck.RTS_RecData() > 0)
 		rtscheck.RTS_HandleData();
+
+  if(rtscheck.recdat.addr != DisplayZaxis && rtscheck.recdat.addr != DisplayYaxis && rtscheck.recdat.addr != DisplayZaxis) {
+		rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)X), DisplayXaxis);
+	  rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)Y), DisplayYaxis);
+		rtscheck.RTS_SndData(10 * getAxisPosition_mm((axis_t)Z), DisplayZaxis);
+  }
   reEntryPrevent = false;
 }
 
@@ -540,7 +520,7 @@ void RTSSHOW::RTS_SndData(int n, unsigned long addr, unsigned char cmd /*= VarAd
 {
 	if (cmd == VarAddr_W)
 	{
-		if ((uint8_t)n > 0xFFFF)
+    if ((uint8_t)n > 0xFFFF)
 		{
 			snddat.data[0] = n >> 16;
 			snddat.data[1] = n & 0xFFFF;
@@ -577,13 +557,18 @@ void RTSSHOW::RTS_SndData(unsigned long n, unsigned long addr, unsigned char cmd
 {
 	if (cmd == VarAddr_W)
 	{
-		if (n > 0xFFFF)
+    if (n > 0xFFFF)
 		{
-			snddat.data[0] = n >> 16;
-			snddat.data[1] = n & 0xFFFF;
+      snddat.data[0] = n >> 16;
+      snddat.data[1] = n & 0xFFFF;
+
+		  //snddat.data[0] = n >> 24;
+			//snddat.data[1] = n >> 16;
+			//snddat.data[2] = n >> 8;
+			//snddat.data[3] = n;
 			snddat.len = 7;
-		}
-		else
+    }
+    else
 		{
 			snddat.data[0] = n;
 			snddat.len = 5;
@@ -695,7 +680,6 @@ void RTSSHOW::RTS_HandleData()
 	{
 		if (recdat.addr == Addrbuf[i])
 		{
-
       if (Addrbuf[i] == NzBdSet || Addrbuf[i] == NozzlePreheat || Addrbuf[i] == BedPreheat || Addrbuf[i] == Flowrate)
 				Checkkey = ManualSetTemp;
 			else if (Addrbuf[i] >= Stopprint && Addrbuf[i] <= Resumeprint)
@@ -710,8 +694,27 @@ void RTSSHOW::RTS_HandleData()
 		}
 	}
 
-  if (recdat.addr == Flowrate)
-    Checkkey = ManualSetTemp;
+  switch(recdat.addr) {
+    case Flowrate :
+    case StepMM_X :
+    case StepMM_Y :
+    case StepMM_Z :
+    case StepMM_E :
+    case ProbeOffset_X :
+    case ProbeOffset_Y :
+    case ProbeOffset_Z :
+    case HotendPID_AutoTmp :
+    case BedPID_AutoTmp :
+    case HotendPID_P :
+    case HotendPID_I :
+    case HotendPID_D :
+    case BedPID_P :
+    case BedPID_I :
+    case BedPID_D :
+      Checkkey = ManualSetTemp;
+    break;
+  }
+
 	if (recdat.addr >= SDFILE_ADDR && recdat.addr <= (SDFILE_ADDR + 10 * (FileNum + 1)))
 		Checkkey = Filename;
 
@@ -722,7 +725,7 @@ void RTSSHOW::RTS_HandleData()
 		recdat.head[1] = FHTWO;
 		return;
 	}
-	SERIAL_ECHO("== Checkkey==");
+	SERIAL_ECHOLN("== Checkkey==");
 	SERIAL_ECHOLN(Checkkey);
 
   #if (ENABLED(MachineCRX) && DISABLED(Force10SProDisplay)) || ENABLED(ForceCRXDisplay)
@@ -752,7 +755,7 @@ void RTSSHOW::RTS_HandleData()
     #endif
 
     const uint8_t validateMesh = 12;
-
+  constexpr float lfrb[4] = LEVEL_CORNERS_INSET_LFRB;
 SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
 	switch (Checkkey)
@@ -763,7 +766,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         InforShowStatus = false;
         CardRecbuf.recordcount = -1;
         RTS_SDCardUpate(false, false);
-        SERIAL_ECHO("\n Handle Data PrintFile 1 Setting Screen ");
+        SERIAL_ECHOLN("Handle Data PrintFile 1 Setting Screen ");
         RTS_SndData(ExchangePageBase + 46, ExchangepageAddr);
       }
       else if (recdat.data[0] == 2) // return after printing result.
@@ -780,14 +783,14 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         RTS_SndData(0, Timehour);
         RTS_SndData(0, Timemin);
 
-        SERIAL_ECHO("\n Handle Data PrintFile 2 Setting Screen ");
+        SERIAL_ECHOLN("Handle Data PrintFile 2 Setting Screen ");
         RTS_SndData(ExchangePageBase + 45, ExchangepageAddr); //exchange to 45 page
       }
       else if (recdat.data[0] == 3) // Temperature control
       {
         InforShowStatus = true;
         TPShowStatus = false;
-        SERIAL_ECHO("\n Handle Data PrintFile 3 Setting Screen ");
+        SERIAL_ECHOLN("Handle Data PrintFile 3 Setting Screen ");
         if (FanStatus)
           RTS_SndData(ExchangePageBase + 58, ExchangepageAddr); //exchange to 58 page, the fans off
         else
@@ -805,7 +808,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.data[0] == 2)
       {
-        SERIAL_ECHO("\n Handle Data Adjust 2 Setting Screen ");
+        SERIAL_ECHOLN("Handle Data Adjust 2 Setting Screen ");
         InforShowStatus = true;
         if (PrinterStatusKey[1] == 3) // during heating
         {
@@ -898,7 +901,6 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         NozzleTempStatus[2] = 1;
         PrinterStatusKey[1] = 0;
         InforShowStatus = true;
-        startprogress = 0;
         RTS_SndData(ExchangePageBase + 82, ExchangepageAddr);
       }
       break;
@@ -916,8 +918,10 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
       if (WITHIN((tmp_zprobe_offset), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
       {
-        babystepAxis_steps((400 * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
-        setZOffset_mm(tmp_zprobe_offset);
+
+        smartAdjustAxis_steps(((getAxisSteps_per_mm(Z) * (getZOffset_mm() - tmp_zprobe_offset)) * -1), (axis_t)Z, false);
+        //babystepAxis_steps(((int)getAxisSteps_per_mm(Z) * (getZOffset_mm() - tmp_zprobe_offset) * -1), (axis_t)Z);
+        //setZOffset_mm(tmp_zprobe_offset);
         injectCommands_P((PSTR("M500")));
       }
       else
@@ -1000,6 +1004,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       break;
 
     case ManualSetTemp:
+    SERIAL_ECHOLN("ManualSetTemp");
       if (recdat.addr == NzBdSet)
       {
         if (recdat.data[0] == 0)
@@ -1021,16 +1026,71 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
       }
       else if (recdat.addr == NozzlePreheat)
-      {
         setTargetTemp_celsius((float)recdat.data[0], H0);
-      }
       else if (recdat.addr == BedPreheat)
-      {
         setTargetTemp_celsius((float)recdat.data[0], BED);
-      }
       else if (recdat.addr == Flowrate)
-      {
         setFlow_percent((int16_t)recdat.data[0], getActiveTool());
+      #if HAS_PID_HEATING
+        else if (recdat.addr == HotendPID_AutoTmp)
+          pid_hotendAutoTemp = (uint16_t)recdat.data[0];
+        else if (recdat.addr == BedPID_AutoTmp)
+          pid_bedAutoTemp = (uint16_t)recdat.data[0];
+      #endif
+      else {
+        float tmp_float_handling;
+        if (recdat.data[0] >= 32768)
+        {
+          tmp_float_handling = ((float)recdat.data[0] - 65536) / 100;
+        }
+        else
+        {
+          tmp_float_handling = ((float)recdat.data[0]) / 100;
+        }
+        if (recdat.addr == StepMM_X) {
+          setAxisSteps_per_mm(tmp_float_handling*10, X);
+        }
+        else if (recdat.addr == StepMM_Y) {
+          setAxisSteps_per_mm(tmp_float_handling*10, Y);
+        }
+        else if (recdat.addr == StepMM_Z) {
+          setAxisSteps_per_mm(tmp_float_handling*10, Z);
+        }
+        else if (recdat.addr == StepMM_E) {
+          setAxisSteps_per_mm(tmp_float_handling*10, E0);
+          setAxisSteps_per_mm(tmp_float_handling*10, E1);
+        }
+        #if HAS_BED_PROBE
+          else if (recdat.addr == ProbeOffset_X) {
+            setProbeOffset_mm(tmp_float_handling, X);
+          }
+          else if (recdat.addr == ProbeOffset_Y) {
+            setProbeOffset_mm(tmp_float_handling, Y);
+          }
+          else if (recdat.addr == ProbeOffset_Z) {
+            setProbeOffset_mm(tmp_float_handling, Z);
+          }
+        #endif
+        #if HAS_PID_HEATING
+          else if (recdat.addr == HotendPID_P) {
+            setPIDValues(tmp_float_handling*10, getPIDValues_Ki(getActiveTool()), getPIDValues_Kd(getActiveTool()), getActiveTool());
+          }
+          else if (recdat.addr == HotendPID_I) {
+            setPIDValues(getPIDValues_Kp(getActiveTool()), tmp_float_handling*10, getPIDValues_Kd(getActiveTool()), getActiveTool());
+          }
+          else if (recdat.addr == HotendPID_D) {
+            setPIDValues(getPIDValues_Kp(getActiveTool()), getPIDValues_Ki(getActiveTool()), tmp_float_handling*10, getActiveTool());
+          }
+          else if (recdat.addr == BedPID_P) {
+            setBedPIDValues(tmp_float_handling*10, getBedPIDValues_Ki(), getBedPIDValues_Kd());
+          }
+          else if (recdat.addr == BedPID_I) {
+            setBedPIDValues(getBedPIDValues_Kp(), tmp_float_handling*10, getBedPIDValues_Kd());
+          }
+          else if (recdat.addr == BedPID_D) {
+            setBedPIDValues(getBedPIDValues_Kp(), getBedPIDValues_Ki(), tmp_float_handling*10);
+          }
+        #endif
       }
       break;
 
@@ -1072,12 +1132,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       }
       else if (recdat.data[0] == 3) //Move
       {
-        //InforShowoStatus = false;
         AxisPagenum = 0;
-        RTS_SndData(10 * getAxisPosition_mm((axis_t)X), DisplayXaxis);
-        RTS_SndData(10 * getAxisPosition_mm((axis_t)Y), DisplayYaxis);
-        RTS_SndData(10 * getAxisPosition_mm((axis_t)Z), DisplayZaxis);
-        delay_ms(2);
         RTS_SndData(ExchangePageBase + 71, ExchangepageAddr);
       }
       else if (recdat.data[0] == 4) //Language
@@ -1125,8 +1180,9 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() + 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            babystepAxis_steps(40, (axis_t)Z);
-            setZOffset_mm(getZOffset_mm() + 0.1);
+            smartAdjustAxis_steps((getAxisSteps_per_mm(Z) / 10), (axis_t)Z, false);
+            //SERIAL_ECHOLNPAIR("Babystep Pos Steps : ", (int)(getAxisSteps_per_mm(Z) / 10));
+            //setZOffset_mm(getZOffset_mm() + 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
             sprintf_P(zOffs, PSTR("Z Offset : %s"), dtostrf(getZOffset_mm(), 1, 3, tmp1));
@@ -1139,8 +1195,10 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         {
           if (WITHIN((getZOffset_mm() - 0.1), Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
           {
-            babystepAxis_steps(-40, (axis_t)Z);
-            setZOffset_mm(getZOffset_mm() - 0.1);
+            smartAdjustAxis_steps(((getAxisSteps_per_mm(Z) / 10) * -1), (axis_t)Z, false);
+            //SERIAL_ECHOLNPAIR("Babystep Neg Steps : ", (int)((getAxisSteps_per_mm(Z) / 10) * -1));
+            //babystepAxis_steps((((int)getAxisSteps_per_mm(Z) / 10) * -1), (axis_t)Z);
+            //setZOffset_mm(getZOffset_mm() - 0.1);
             RTS_SndData(getZOffset_mm() * 100, 0x1026);
             char zOffs[20], tmp1[11];
             sprintf_P(zOffs, PSTR("Z Offset : %s"), dtostrf(getZOffset_mm(), 1, 3, tmp1));
@@ -1187,32 +1245,32 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         case topLeftData: // Assitant Level , Front Left 2
         {
           setAxisPosition_mm(LEVEL_CORNERS_Z_HOP, (axis_t)Z);
-          setAxisPosition_mm((X_MIN_BED + LEVEL_CORNERS_INSET), (axis_t)X);
-          setAxisPosition_mm((Y_MIN_BED + LEVEL_CORNERS_INSET), (axis_t)Y);
+          setAxisPosition_mm((X_MIN_BED + lfrb[0]), (axis_t)X);
+          setAxisPosition_mm((Y_MIN_BED + lfrb[1]), (axis_t)Y);
           waitway = 6;
           break;
         }
         case topRightData: // Assitant Level , Front Right 3
         {
           setAxisPosition_mm(LEVEL_CORNERS_Z_HOP, (axis_t)Z);
-          setAxisPosition_mm((X_MAX_BED - LEVEL_CORNERS_INSET), (axis_t)X);
-          setAxisPosition_mm((Y_MIN_BED + LEVEL_CORNERS_INSET), (axis_t)Y);
+          setAxisPosition_mm((X_MAX_BED - lfrb[2]), (axis_t)X);
+          setAxisPosition_mm((Y_MIN_BED + lfrb[1]), (axis_t)Y);
           waitway = 6;
           break;
         }
         case lowRightData: // Assitant Level , Back Right 4
         {
           setAxisPosition_mm(LEVEL_CORNERS_Z_HOP, (axis_t)Z);
-          setAxisPosition_mm((X_MAX_BED - LEVEL_CORNERS_INSET), (axis_t)X);
-          setAxisPosition_mm((Y_MAX_BED - LEVEL_CORNERS_INSET), (axis_t)Y);
+          setAxisPosition_mm((X_MAX_BED - lfrb[2]), (axis_t)X);
+          setAxisPosition_mm((Y_MAX_BED - lfrb[3]), (axis_t)Y);
           waitway = 6;
           break;
         }
         case lowLeftData: // Assitant Level , Back Left 5
         {
           setAxisPosition_mm(LEVEL_CORNERS_Z_HOP, (axis_t)Z);
-          setAxisPosition_mm((X_MIN_BED + LEVEL_CORNERS_INSET), (axis_t)X);
-          setAxisPosition_mm((Y_MAX_BED - LEVEL_CORNERS_INSET), (axis_t)Y);
+          setAxisPosition_mm((X_MIN_BED + lfrb[0]), (axis_t)X);
+          setAxisPosition_mm((Y_MAX_BED - lfrb[3]), (axis_t)Y);
           waitway = 6;
           break;
         }
@@ -1241,7 +1299,8 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         default:
         {
-          SERIAL_ECHOPAIR("Unsupported Option Selected", recdat.data[0]);
+          SERIAL_ECHOLNPAIR("Unsupported Option Selected", recdat.data[0]);
+          break;
         }
       }
 
@@ -1249,6 +1308,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
       break;
 
     case XYZEaxis:
+    {
       axis_t axis;
       float min, max;
       waitway = 4;
@@ -1289,22 +1349,17 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         break;
       }
 
-      targetPos = ((float)recdat.data[0]) / 10;
+      float targetPos = ((float)recdat.data[0]) / 10;
 
       if (targetPos < min)
         targetPos = min;
       else if (targetPos > max)
         targetPos = max;
-
       setAxisPosition_mm(targetPos, axis);
-      delay_ms(1);
-      RTS_SndData(10 * getAxisPosition_mm((axis_t)X), DisplayXaxis);
-      RTS_SndData(10 * getAxisPosition_mm((axis_t)Y), DisplayYaxis);
-      RTS_SndData(10 * getAxisPosition_mm((axis_t)Z), DisplayZaxis);
-      delay_ms(1);
       waitway = 0;
       RTS_SndData(10, FilenameIcon);
       break;
+    }
 
     case Filement:
 
@@ -1320,7 +1375,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
 
         switch(recdat.data[0])
-          {
+        {
           case 1 : // Unload filement1
           {
             setAxisPosition_mm((getAxisPosition_mm(E0) - ChangeMaterialbuf[0]), E0);
@@ -1389,7 +1444,7 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
     case LanguageChoice:
 
-      SERIAL_ECHOPAIR("\n ***recdat.data[0] =", recdat.data[0]);
+      SERIAL_ECHOLNPAIR("\n ***recdat.data[0] =", recdat.data[0]);
       /*if(recdat.data[0]==1) {
           settings.save();
         }
@@ -1397,33 +1452,50 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           injectCommands_P(PSTR("M300"));
         }*/
       // may at some point use language change screens to save eeprom explicitly
+      SERIAL_ECHOLN("InLangChoice");
       switch(recdat.data[0])
       {
-        case 0:
+        case 0: {
           SERIAL_ECHOLN("Chinese Not Supported");
           break;
-        case 1:
+        }
+        case 1: {
           SERIAL_ECHOLN("English Already Set");
           break;
-        case 2:
-          //PID Hotend
-          injectCommands_P(PSTR("M303E0S215C8U"));
-          break;
-        case 3:
-          //Init EEPROM
+        }
+        #if HAS_PID_HEATING
+          case 2: {
+            SERIAL_ECHOLN("Hotend PID");
+            startPIDTune(pid_hotendAutoTemp, getActiveTool());
+            break;
+          }
+        #endif
+        case 3: {
+          SERIAL_ECHOLN("Init EEPROM");
           injectCommands_P(PSTR("M502\nM500"));
           break;
-        case 4:
-          //BLTouch Reset
+        }
+        case 4: {
+          SERIAL_ECHOLN("BLTouch Reset");
           injectCommands_P(PSTR("M999\nM280P0S160"));
           break;
-        case 5:
-          //PID Bed
-          injectCommands_P(PSTR("M303E-1S65C4U"));
+        }
+        #if HAS_PID_HEATING
+          case 5: {
+            SERIAL_ECHOLN("Bed PID");
+            startBedPIDTune(pid_bedAutoTemp);
+            break;
+          }
+        #endif
+        case 6: {
+          SERIAL_ECHOLN("Store Settings");
+          injectCommands_P(PSTR("M500"));
           break;
-        default:
+        }
+        default: {
           SERIAL_ECHOLN("Invalid Option");
           break;
+        }
       }
       break;
     case No_Filement:
@@ -1478,62 +1550,13 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 
   #if ENABLED(POWER_LOSS_RECOVERY)
     case PwrOffNoF:
-      char cmd1[30];
       if (recdat.data[0] == 1) // Yes:continue to print the 3Dmode during power-off.
       {
-        if (power_off_commands_count > 0)
-        {
-          sprintf_P(cmd1, PSTR("M190 S%i"), power_off_info.target_temperature_bed);
-          injectCommands_P(cmd1);
-          sprintf_P(cmd1, PSTR("M109 S%i"), power_off_info.target_temperature[0]);
-          injectCommands_P(cmd1);
-          injectCommands_P(PSTR("M106 S255"));
-          sprintf_P(cmd1, PSTR("T%i"), power_off_info.saved_extruder);
-          injectCommands_P(cmd1);
-          power_off_type_yes = 1;
-
-  #if FAN_COUNT > 0
-          for (uint8_t i = 0; i < FAN_COUNT; i++)
-            fanSpeeds[i] = FanOn;
-  #endif
-          FanStatus = false;
-
-          PrintStatue[1] = 0;
-          PrinterStatusKey[0] = 1;
-          PrinterStatusKey[1] = 3;
-          PoweroffContinue = true;
-          TPShowStatus = InforShowStatus = true;
-
-          RTS_SndData(1 + CEIconGrap, IconPrintstatus);
-          RTS_SndData(ExchangePageBase + 53, ExchangepageAddr);
-
-          //card.startFileprint();
-          //print_job_timer.power_off_start();
-        }
+        injectCommands_P(PSTR("M1000"));
       }
       else if (recdat.data[0] == 2) // No
       {
-        InforShowStatus = true;
-        TPShowStatus = false;
-        RTS_SndData(ExchangePageBase + 45, ExchangepageAddr); //exchange to 45 page
-
-        stopPrint();
-
-  #if ENABLED(SDSUPPORT) && ENABLED(POWEROFF_SAVE_SD_FILE)
-        card.openPowerOffFile(power_off_info.power_off_filename, O_CREAT | O_WRITE | O_TRUNC | O_SYNC);
-        power_off_info.valid_head = 0;
-        power_off_info.valid_foot = 0;
-        if (card.savePowerOffInfo(&power_off_info, sizeof(power_off_info)) == -1)
-        {
-          SERIAL_ECHOLN("Stop to Write power off file failed.");
-        }
-        card.closePowerOffFile();
-        power_off_commands_count = 0;
-  #endif
-
-        wait_for_heatup = false;
-        PrinterStatusKey[0] = 0;
-        delay_ms(500); //for system
+        injectCommands_P(PSTR("M1000C"));
       }
       break;
   #endif
@@ -1658,13 +1681,12 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
 	recdat.head[1] = FHTWO;
 }
 
-void onPrinterKilled(PGM_P msg, PGM_P component) {
+void onPrinterKilled(PGM_P killMsg, PGM_P component) {
   SERIAL_ECHOLN("***kill***");
   //First we send screen available on old versions of software
 	rtscheck.RTS_SndData(ExchangePageBase + 15, ExchangepageAddr);
   //Then we send the new one Creality added in 1.70.1
 	rtscheck.RTS_SndData(ExchangePageBase + 88, ExchangepageAddr);
-  delay_ms(3);
   int j = 0;
   char outmsg[40];
   while (j<4)
@@ -1672,7 +1694,7 @@ void onPrinterKilled(PGM_P msg, PGM_P component) {
     outmsg[j] = '*';
     j++;
   }
-  while (const char c = pgm_read_byte(msg++)) {
+  while (const char c = pgm_read_byte(killMsg++)) {
     outmsg[j] = c;
     j++;
   }
@@ -1704,7 +1726,6 @@ void onMediaRemoved()
 }
 
 void onPlayTone(const uint16_t frequency, const uint16_t duration) {
-
 	SERIAL_ECHOLN("***CPlay Tone***");
   rtscheck.RTS_SndData(StartSoundSet, SoundAddr);
 }
@@ -1714,14 +1735,6 @@ void onPrintTimerStarted()
 	SERIAL_ECHOLN("==onPrintTimerStarted==");
   if ( waitway == 7 )
     return;
-  #if ENABLED(POWER_LOSS_RECOVERY)
-    if (PoweroffContinue)
-    {
-      injectCommands_P(power_off_commands[0]);
-      injectCommands_P(power_off_commands[1]);
-      injectCommands_P((PSTR("G28 X0 Y0")));
-    }
-  #endif
 	PrinterStatusKey[1] = 3;
 	InforShowStatus = true;
 	rtscheck.RTS_SndData(4 + CEIconGrap, IconPrintstatus);
@@ -1740,18 +1753,6 @@ void onPrintTimerStopped()
   if(waitway == 3)
     return;
 
-#if ENABLED(SDSUPPORT) && ENABLED(POWEROFF_SAVE_SD_FILE)
-	card.openPowerOffFile(power_off_info.power_off_filename, O_CREAT | O_WRITE | O_TRUNC | O_SYNC);
-	power_off_info.valid_head = 0;
-	power_off_info.valid_foot = 0;
-	if (card.savePowerOffInfo(&power_off_info, sizeof(power_off_info)) == -1)
-	{
-		SERIAL_PROTOCOLLN("Stop to Write power off file failed.");
-	}
-	card.closePowerOffFile();
-	power_off_commands_count = 0;
-#endif
-
 #if FAN_COUNT > 0
 	for (uint8_t i = 0; i < FAN_COUNT; i++)
 		setTargetFan_percent(FanOff, (fan_t)i);
@@ -1759,7 +1760,6 @@ void onPrintTimerStopped()
 	FanStatus = true;
 
 	PrinterStatusKey[0] = 0;
-	power_off_type_yes = 1;
 	InforShowStatus = true;
 	TPShowStatus = false;
 	rtscheck.RTS_SndData(ExchangePageBase + 45, ExchangepageAddr);
@@ -1792,16 +1792,20 @@ void onUserConfirmRequired(const char *const msg)
   rtscheck.RTS_SndData(ExchangePageBase + 78, ExchangepageAddr);
 	SERIAL_ECHOLN("==onUserConfirmRequired==");
 }
-void onStatusChanged(const char *const msg)
+void onStatusChanged(const char *const statMsg)
 {
   for (int j = 0; j < 40; j++) // Clear old message
     rtscheck.RTS_SndData(' ', StatusMessageString+j);
-  rtscheck.RTS_SndData(msg, StatusMessageString);
+  rtscheck.RTS_SndData(statMsg, StatusMessageString);
 }
 void onFactoryReset()
 {
+  onStartup();
+  startprogress = 0;
+  InforShowStatus = true;
 	SERIAL_ECHOLN("==onFactoryReset==");
 }
+
 void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
 {
   if(waitway==3)
@@ -1889,6 +1893,31 @@ void onConfigurationStoreRead(bool success)
 	SERIAL_ECHOLNPAIR("\n init zprobe_zoffset = ", getZOffset_mm());
 	rtscheck.RTS_SndData(getZOffset_mm() * 100, 0x1026);
 }
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+  void OnPowerLossResume() {
+    SERIAL_ECHOLN("==OnPowerLossResume==");
+    startprogress = 254;
+    InforShowStatus = true;
+    TPShowStatus = false;
+    reEntryPrevent = false;
+    rtscheck.RTS_SndData(ExchangePageBase + 76, ExchangepageAddr);
+  }
+#endif
+
+#if HAS_PID_HEATING
+  void OnPidTuning(const result_t rst) {
+    // Called for temperature PID tuning result
+    rtscheck.RTS_SndData(pid_hotendAutoTemp, HotendPID_AutoTmp);
+        rtscheck.RTS_SndData(pid_bedAutoTemp, BedPID_AutoTmp);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
+        rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
+        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+  }
+#endif
 
 } // namespace ExtUI
 
