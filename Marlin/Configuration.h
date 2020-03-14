@@ -48,7 +48,9 @@
 //#define HotendMosquito
 
 //Enable this if you have an all metal hotend capable of 300c
-#define HotendAllMetal
+#ifndef HotendAllMetal
+  #define HotendAllMetal
+#endif
 
 // Enable this if you used a plug and play creality e3d or mosquito kit and kept the Creality thermistor
 //#define CrealityThermistor
@@ -282,7 +284,7 @@
 // Enable to show the bitmap in Marlin/_Bootscreen.h on startup.
 #if ENABLED(MachineCR10SProV2)
   #define MachineCR10SPro
-  #if NONE(ABL_NCSW, ABL_EZABL)
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
 #endif
@@ -300,7 +302,7 @@
 #endif
 
 #if ENABLED(MachineCR10Max)
-  #if NONE(ABL_NCSW, ABL_EZABL)
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
   #if DISABLED(ABL_UBL)
@@ -311,7 +313,7 @@
 #endif
 
 #if ENABLED(MachineEnder5Plus)
-  #if DISABLED(ABL_NCSW) && DISABLED(ABL_EZABL)
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
   #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11)
@@ -357,7 +359,9 @@
   #if DISABLED(ABL_UBL)
     #define ABL_BI
   #endif
-  #define ABL_BLTOUCH
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
+    #define ABL_BLTOUCH
+  #endif
 #endif
 
 #if NONE(HotendStock, HotendE3D)
@@ -380,7 +384,7 @@
 #if ENABLED(MachineCR20Pro)
   #define LCD_CONTRAST_INIT 165
   #define MachineCR20
-  #if DISABLED(ABL_EZABL) && DISABLED(ABL_NCSW)
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
   #define HotendAllMetal
