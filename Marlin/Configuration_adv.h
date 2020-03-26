@@ -31,7 +31,7 @@
  * Basic settings can be found in Configuration.h
  *
  */
-#define CONFIGURATION_ADV_H_VERSION 020004
+#define CONFIGURATION_ADV_H_VERSION 020005
 
 // @section temperature
 
@@ -1033,7 +1033,9 @@
   #define LCD_TIMEOUT_TO_STATUS 15000
 
   // Add an 'M73' G-code to set the current percentage
-  #define LCD_SET_PROGRESS_MANUALLY
+  #if DISABLED(MachineEnder4) || ENABLED(GraphicLCD)
+    #define LCD_SET_PROGRESS_MANUALLY
+  #endif
 #endif
 // Show the E position (filament used) during printing
 //#define LCD_SHOW_E_TOTAL
@@ -1066,7 +1068,7 @@
   // This setting should be disabled unless you are using a push button, pulling the pin to ground.
   // Note: This is always disabled for ULTIPANEL (except ELB_FULL_GRAPHIC_CONTROLLER).
   #if NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max)
-    #define SD_DETECT_INVERTED
+    #define SD_DETECT_STATE HIGH
   #endif
   #define SD_FINISHED_STEPPERRELEASE true          // Disable steppers when SD Print is finished
   #define SD_FINISHED_RELEASECOMMAND "M84 X Y Z E" // You might want to keep the Z enabled so your bed stays in place.

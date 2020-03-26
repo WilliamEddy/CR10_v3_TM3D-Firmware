@@ -63,6 +63,7 @@
  //#define Bondtech
  //#define E3DTitan
  //#define E3DHemera
+ //#define CrealityTitan
 
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
 
@@ -232,7 +233,7 @@
  * Advanced settings can be found in Configuration_adv.h
  *
  */
-#define CONFIGURATION_H_VERSION 020004
+#define CONFIGURATION_H_VERSION 020005
 
 //===========================================================================
 //============================= Getting Started =============================
@@ -287,6 +288,11 @@
   #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
+#endif
+
+#if ENABLED(CrealityTitan)
+#define DirectDrive
+#define E3DTitan
 #endif
 
 #if(ENABLED(MachineCR10SPro))
@@ -1243,7 +1249,9 @@
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
 
-#if(ENABLED(Bondtech) || ENABLED(E3DTitan))
+#if ENABLED(CrealityTitan)
+  #define EStepsmm 382.14
+#elif(ENABLED(Bondtech) || ENABLED(E3DTitan))
   #define EStepsmm 415
 #elif ENABLED(E3DHemera)
   #define EStepsmm 409
