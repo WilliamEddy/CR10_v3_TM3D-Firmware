@@ -317,7 +317,9 @@
   #endif
   #define lerdgeFilSensor
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
@@ -330,7 +332,9 @@
   #endif
   #define lerdgeFilSensor
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
@@ -347,14 +351,18 @@
     #define ABL_BI
   #endif
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
 #if ENABLED(MachineCR10SV2)
   #define lerdgeFilSensor
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
@@ -404,7 +412,9 @@
   #define MachineCR10Std
   #define Dual_BowdenSplitterY
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
@@ -432,7 +442,9 @@
   #endif
   #define SolidBedMounts
   #if DISABLED(BedAC)
-    #define BedDC
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
