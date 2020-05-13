@@ -495,7 +495,7 @@
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
 
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) && NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) || (ENABLED(GraphicLCD) && NONE(Force10SProDisplay, ForceCRXDisplay))
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) && (NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) || (ENABLED(GraphicLCD) && NONE(Force10SProDisplay, ForceCRXDisplay)))
   #define SERIAL_PORT_2 0
 #elif ANY(SKR13, SKR14, SKR14Turbo)
   #define DGUS_SERIAL_PORT 0
@@ -818,28 +818,19 @@
  */
 #if ENABLED(ConfigurableThermistors)
   #define TEMP_SENSOR_0 1000
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 1000
-  #endif
 #elif ENABLED(HotendMosquito)
   #define TEMP_SENSOR_0 67
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 67
-  #endif
 #elif ENABLED(HotendE3D)
   #define TEMP_SENSOR_0 5
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 5
-  #endif
 #elif ANY(HotendStock, CrealityThermistor)
   #define TEMP_SENSOR_0 1
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 1
-  #endif
 #endif
-#if(DISABLED(Dual_ChimeraDualNozzle))
+#if DISABLED(Dual_ChimeraDualNozzle)
   #define TEMP_SENSOR_1 0
+#else
+  #define TEMP_SENSOR_1 TEMP_SENSOR_0
 #endif
+
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_4 0
@@ -1899,13 +1890,6 @@
     #define X_MAX_POS 315
     #define Y_MAX_POS 308
     #define ClipClearance 15
-  #elif ENABLED(MachineCR10SPro)
-    #define X_BED_SIZE 300
-    #define Y_BED_SIZE 300
-    #define Z_MAX_POS 400
-    #define X_MAX_POS 315
-    #define Y_MAX_POS 310
-    #define ClipClearance 10
   #elif ENABLED(MachineCR10SProV2)
     #define X_BED_SIZE 300
     #define Y_BED_SIZE 300
@@ -1913,6 +1897,13 @@
     #define X_MAX_POS 315
     #define Y_MAX_POS 310
     #define ClipClearance 5
+  #elif ENABLED(MachineCR10SPro)
+    #define X_BED_SIZE 300
+    #define Y_BED_SIZE 300
+    #define Z_MAX_POS 400
+    #define X_MAX_POS 315
+    #define Y_MAX_POS 310
+    #define ClipClearance 10
   #elif ENABLED(MachineCR10Std)
     #define X_BED_SIZE 300
     #define Y_BED_SIZE 300
