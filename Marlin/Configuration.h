@@ -64,7 +64,7 @@
  //#define Bondtech
  //#define E3DTitan
  //#define E3DHemera
- //#define CrealityTitan
+ #define CrealityTitan
 
  //#define MicroswissDirectDrive
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
